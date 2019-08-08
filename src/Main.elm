@@ -298,7 +298,7 @@ view model =
         , Grid.row []
             [ Grid.col [ Col.sm ]
                 [ Html.h1 []
-                    [ text "BF/Ook! like language interpreter"
+                    [ text "BF/Ook! like language interpreter/transpiler"
                     ]
                 ]
             ]
