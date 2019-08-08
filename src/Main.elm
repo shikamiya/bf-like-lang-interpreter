@@ -54,7 +54,9 @@ main =
 subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.batch
-        [ Dropdown.subscriptions model.dropdownStates.parserTokenTable UpdateParserTokenTableDropDownState ]
+        [ Dropdown.subscriptions model.tokenTableStates.parser.dropdownState UpdateParserTokenTableDropDownState
+        , Dropdown.subscriptions model.tokenTableStates.display.dropdownState UpdateDisplayTokenTableDropDownState
+        ]
 
 
 
@@ -63,15 +65,20 @@ subscriptions model =
 
 type alias Model =
     { programContent : String
-    , parserTokenTable : BFTokenTable
-    , dropdownStates : DropdownStates
+    , tokenTableStates : TokenTableDropdowns
     , state : BFRunningState
     }
 
 
-type alias DropdownStates =
-    { parserTokenTable : Dropdown.State
-    , displayTokenTable : Dropdown.State
+type alias TokenTableDropdowns =
+    { parser : TokenTableDropdown
+    , display : TokenTableDropdown
+    }
+
+
+type alias TokenTableDropdown =
+    { dropdownState : Dropdown.State
+    , tokenTable : BFTokenTable
     }
 
 
@@ -86,16 +93,22 @@ init flags =
 initialModel : Model
 initialModel =
     { programContent = ""
-    , parserTokenTable = Language.BF.table
-    , dropdownStates = initialDropdownStates
+    , tokenTableStates = initialTokenTableStates
     , state = initialRunningState
     }
 
 
-initialDropdownStates : DropdownStates
-initialDropdownStates =
-    { parserTokenTable = Dropdown.initialState
-    , displayTokenTable = Dropdown.initialState
+initialTokenTableStates : TokenTableDropdowns
+initialTokenTableStates =
+    { parser = initialTokenTableState
+    , display = initialTokenTableState
+    }
+
+
+initialTokenTableState : TokenTableDropdown
+initialTokenTableState =
+    { dropdownState = Dropdown.initialState
+    , tokenTable = Language.BF.table
     }
 
 
@@ -142,6 +155,8 @@ type Msg
     | UpdateInput String
     | UpdateParserTokenTable BFTokenTable
     | UpdateParserTokenTableDropDownState Dropdown.State
+    | UpdateDisplayTokenTable BFTokenTable
+    | UpdateDisplayTokenTableDropDownState Dropdown.State
     | ResetAll
     | ResetRunnningState
     | Run
@@ -160,7 +175,7 @@ update msg model =
         ParseTokens ->
             let
                 commands =
-                    parseTokens model.parserTokenTable model.programContent
+                    parseTokens model.tokenTableStates.parser.tokenTable model.programContent
                         |> Result.withDefault model.state.commands
 
                 state =
@@ -178,20 +193,73 @@ update msg model =
                 |> withCmdNone
 
         UpdateParserTokenTable table ->
-            { model | parserTokenTable = table }
+            let
+                oldParser =
+                    model.tokenTableStates.parser
+
+                parser =
+                    { oldParser | tokenTable = table }
+
+                oldTokenTableStates =
+                    model.tokenTableStates
+
+                tokenTableStates =
+                    { oldTokenTableStates | parser = parser }
+            in
+            { model | tokenTableStates = tokenTableStates }
                 |> update ParseTokens
                 |> Tuple.first
                 |> withCmdNone
 
         UpdateParserTokenTableDropDownState state ->
             let
-                dropdownStates =
-                    model.dropdownStates
+                oldParser =
+                    model.tokenTableStates.parser
 
-                newDropdownStates =
-                    { dropdownStates | parserTokenTable = state }
+                parser =
+                    { oldParser | dropdownState = state }
+
+                oldTokenTableStates =
+                    model.tokenTableStates
+
+                tokenTableStates =
+                    { oldTokenTableStates | parser = parser }
             in
-            { model | dropdownStates = newDropdownStates }
+            { model | tokenTableStates = tokenTableStates }
+                |> withCmdNone
+
+        UpdateDisplayTokenTable table ->
+            let
+                oldDisplay =
+                    model.tokenTableStates.display
+
+                display =
+                    { oldDisplay | tokenTable = table }
+
+                oldTokenTableStates =
+                    model.tokenTableStates
+
+                tokenTableStates =
+                    { oldTokenTableStates | display = display }
+            in
+            { model | tokenTableStates = tokenTableStates }
+                |> withCmdNone
+
+        UpdateDisplayTokenTableDropDownState state ->
+            let
+                oldDisplay =
+                    model.tokenTableStates.display
+
+                display =
+                    { oldDisplay | dropdownState = state }
+
+                oldTokenTableStates =
+                    model.tokenTableStates
+
+                tokenTableStates =
+                    { oldTokenTableStates | display = display }
+            in
+            { model | tokenTableStates = tokenTableStates }
                 |> withCmdNone
 
         ResetAll ->
@@ -239,13 +307,13 @@ view model =
                 [ Card.config []
                     |> Card.header []
                         [ Dropdown.dropdown
-                            model.dropdownStates.parserTokenTable
+                            model.tokenTableStates.parser.dropdownState
                             { options = []
                             , toggleMsg = UpdateParserTokenTableDropDownState
                             , toggleButton =
-                                Dropdown.toggle [ Button.primary ] [ text <| Tuple.second model.parserTokenTable ]
+                                Dropdown.toggle [ Button.primary ] [ text <| Tuple.second model.tokenTableStates.parser.tokenTable ]
                             , items =
-                                List.map viewOfBFTokenTableItem bfTokenTableList
+                                List.map (viewOfBFTokenTableItem UpdateParserTokenTable) bfTokenTableList
                             }
                         ]
                     |> Card.block []
@@ -260,9 +328,20 @@ view model =
                 ]
             , Grid.col [ Col.lg6 ]
                 [ Card.config [ Card.attrs [ Html.Attributes.class "h-100" ] ]
-                    |> Card.header [] [ text "Parsed commands" ]
+                    |> Card.header []
+                        [ text "Parsed commands by: "
+                        , Dropdown.dropdown
+                            model.tokenTableStates.display.dropdownState
+                            { options = []
+                            , toggleMsg = UpdateDisplayTokenTableDropDownState
+                            , toggleButton =
+                                Dropdown.toggle [ Button.primary ] [ text <| Tuple.second model.tokenTableStates.display.tokenTable ]
+                            , items =
+                                List.map (viewOfBFTokenTableItem UpdateDisplayTokenTable) bfTokenTableList
+                            }
+                        ]
                     |> Card.block []
-                        [ Array.map (viewOfBFCommand model.state.stepIndex 0) model.state.commands
+                        [ Array.map (viewOfBFCommand model 0) model.state.commands
                             |> Array.toList
                             |> List.concat
                             |> Html.p []
@@ -309,14 +388,17 @@ view model =
         ]
 
 
-viewOfBFTokenTableItem : BFTokenTable -> Dropdown.DropdownItem Msg
-viewOfBFTokenTableItem table =
-    Dropdown.buttonItem [ Html.Events.onClick <| UpdateParserTokenTable table ] [ text <| Tuple.second table ]
+viewOfBFTokenTableItem : (BFTokenTable -> Msg) -> BFTokenTable -> Dropdown.DropdownItem Msg
+viewOfBFTokenTableItem msg table =
+    Dropdown.buttonItem [ Html.Events.onClick <| msg table ] [ text <| Tuple.second table ]
 
 
-viewOfBFCommand : Maybe Int -> Int -> BFCommand -> List (Html Msg)
-viewOfBFCommand stepIndex depth cmd =
+viewOfBFCommand : Model -> Int -> BFCommand -> List (Html Msg)
+viewOfBFCommand model depth cmd =
     let
+        stepIndex =
+            model.state.stepIndex
+
         newDepth =
             depth + 1
 
@@ -364,6 +446,12 @@ viewOfBFCommand stepIndex depth cmd =
                     let
                         isCurrentCommand =
                             stepIndex /= Nothing && token.index == stepIndex
+
+                        displayValue =
+                            List.filter (\table -> token.kind == Tuple.first table) (Tuple.first model.tokenTableStates.display.tokenTable)
+                                |> List.head
+                                |> Maybe.withDefault ( token.kind, token.value )
+                                |> Tuple.second
                     in
                     Html.span
                         [ Html.Attributes.classList
@@ -373,13 +461,13 @@ viewOfBFCommand stepIndex depth cmd =
                             , ( "font-weight-bold", True )
                             ]
                         ]
-                        [ text token.value ]
+                        [ text displayValue ]
                         |> List.singleton
 
         BFLoopFunc commands ->
             let
                 children =
-                    Array.map (viewOfBFCommand stepIndex newDepth) commands
+                    Array.map (viewOfBFCommand model newDepth) commands
                         |> Array.toList
                         |> List.concat
             in
