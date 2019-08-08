@@ -1,9 +1,9 @@
-module Main exposing (init)
+module Main exposing (main)
 
-import Array exposing (Array)
-import BFParser exposing (..)
-import BFRunner exposing (..)
-import BFTypes exposing (..)
+import Array
+import BFParser exposing (bfParseErrorToString, parseTokens)
+import BFRunner exposing (bfRun, bfStepRun, initialRunningState)
+import BFTypes exposing (BFCommand(..), BFParseError(..), BFRunningState, BFTape(..), BFTokenKind(..), BFTokenTable)
 import Bootstrap.Button as Button
 import Bootstrap.CDN
 import Bootstrap.Card as Card
@@ -13,7 +13,6 @@ import Bootstrap.Form.Textarea as Textarea
 import Bootstrap.Grid as Grid
 import Bootstrap.Grid.Col as Col
 import Bootstrap.Grid.Row as Row
-import Bootstrap.Text as Text
 import Browser
 import Cacher exposing (cache)
 import Html exposing (Html, text)
@@ -30,6 +29,7 @@ import Language.Ook
 -- Config
 
 
+bfTokenTableList : List BFTokenTable
 bfTokenTableList =
     [ Language.BrainFuck.table
     , Language.HogyLang.table
@@ -64,10 +64,14 @@ subscriptions model =
 type alias Model =
     { programContent : String
     , parserTokenTable : BFTokenTable
-    , dropdownStates :
-        { parserTokenTable : Dropdown.State
-        }
+    , dropdownStates : DropdownStates
     , state : BFRunningState
+    }
+
+
+type alias DropdownStates =
+    { parserTokenTable : Dropdown.State
+    , displayTokenTable : Dropdown.State
     }
 
 
@@ -81,8 +85,15 @@ initialModel : Model
 initialModel =
     { programContent = ""
     , parserTokenTable = Language.BrainFuck.table
-    , dropdownStates = { parserTokenTable = Dropdown.initialState }
+    , dropdownStates = initialDropdownStates
     , state = initialRunningState
+    }
+
+
+initialDropdownStates : DropdownStates
+initialDropdownStates =
+    { parserTokenTable = Dropdown.initialState
+    , displayTokenTable = Dropdown.initialState
     }
 
 
@@ -287,6 +298,7 @@ view model =
         ]
 
 
+viewOfBFTokenTableItem : BFTokenTable -> Dropdown.DropdownItem Msg
 viewOfBFTokenTableItem table =
     Dropdown.buttonItem [ Html.Events.onClick <| UpdateParserTokenTable table ] [ text <| Tuple.second table ]
 

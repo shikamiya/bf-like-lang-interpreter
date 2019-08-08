@@ -1,8 +1,8 @@
 module BFParser exposing (bfParseErrorToString, parseTokens)
 
 import Array exposing (Array)
-import BFTypes exposing (..)
-import Parser exposing ((|.), (|=), Parser)
+import BFTypes exposing (BFCommand(..), BFParseError(..), BFTape(..), BFToken, BFTokenKind(..), BFTokenTable)
+import Parser exposing ((|.), Parser)
 
 
 type BFCommandList

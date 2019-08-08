@@ -1,7 +1,7 @@
 module BFRunner exposing (bfRun, bfStepRun, getTapeValue, initialBFTape, initialRunningState)
 
 import Array exposing (Array)
-import BFTypes exposing (..)
+import BFTypes exposing (BFCommand(..), BFParseError(..), BFRunningState, BFTape(..), BFTokenKind(..))
 
 
 initialRunningState : BFRunningState
@@ -315,7 +315,7 @@ getBFCommandByRevIndices cmds pos =
                 Just (BFLoopFunc newCmds) ->
                     getBFCommandByRevIndices newCmds remainingPos
 
-                Just ((BFCommand token) as cmd) ->
+                Just ((BFCommand _) as cmd) ->
                     Just cmd
 
                 Nothing ->
