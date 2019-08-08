@@ -20,7 +20,7 @@ import Html.Attributes
 import Html.Events
 import Json.Decode
 import Json.Encode
-import Language.BrainFuck
+import Language.BF
 import Language.HogyLang
 import Language.Ook
 
@@ -31,7 +31,7 @@ import Language.Ook
 
 bfTokenTableList : List BFTokenTable
 bfTokenTableList =
-    [ Language.BrainFuck.table
+    [ Language.BF.table
     , Language.HogyLang.table
     , Language.Ook.table
     ]
@@ -86,7 +86,7 @@ init flags =
 initialModel : Model
 initialModel =
     { programContent = ""
-    , parserTokenTable = Language.BrainFuck.table
+    , parserTokenTable = Language.BF.table
     , dropdownStates = initialDropdownStates
     , state = initialRunningState
     }
@@ -230,7 +230,7 @@ view model =
         , Grid.row []
             [ Grid.col [ Col.sm ]
                 [ Html.h1 []
-                    [ text "Brainfuck/Ook! like language interpreter"
+                    [ text "BF/Ook! like language interpreter"
                     ]
                 ]
             ]
@@ -260,7 +260,7 @@ view model =
                 ]
             , Grid.col [ Col.lg6 ]
                 [ Card.config [ Card.attrs [ Html.Attributes.class "h-100" ] ]
-                    |> Card.header [] [ text "Parsed Brainfuck commands" ]
+                    |> Card.header [] [ text "Parsed commands" ]
                     |> Card.block []
                         [ Array.map (viewOfBFCommand model.state.stepIndex 0) model.state.commands
                             |> Array.toList

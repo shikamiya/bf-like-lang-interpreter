@@ -4801,7 +4801,7 @@ var author$project$BFTypes$IncreaseValue = 3;
 var author$project$BFTypes$LoopEnd = 2;
 var author$project$BFTypes$LoopStart = 1;
 var author$project$BFTypes$PrintCharacter = 8;
-var author$project$Language$BrainFuck$table = _Utils_Tuple2(
+var author$project$Language$BF$table = _Utils_Tuple2(
 	_List_fromArray(
 		[
 			_Utils_Tuple2(1, '['),
@@ -4813,7 +4813,7 @@ var author$project$Language$BrainFuck$table = _Utils_Tuple2(
 			_Utils_Tuple2(7, ','),
 			_Utils_Tuple2(8, '.')
 		]),
-	'BrainFuck');
+	'BF');
 var rundis$elm_bootstrap$Bootstrap$Dropdown$Closed = 2;
 var rundis$elm_bootstrap$Bootstrap$Dropdown$State = elm$core$Basics$identity;
 var rundis$elm_bootstrap$Bootstrap$Utilities$DomHelper$Area = F4(
@@ -4826,7 +4826,7 @@ var rundis$elm_bootstrap$Bootstrap$Dropdown$initialState = {
 	bP: A4(rundis$elm_bootstrap$Bootstrap$Utilities$DomHelper$Area, 0, 0, 0, 0)
 };
 var author$project$Main$initialDropdownStates = {cC: rundis$elm_bootstrap$Bootstrap$Dropdown$initialState, s: rundis$elm_bootstrap$Bootstrap$Dropdown$initialState};
-var author$project$Main$initialModel = {U: author$project$Main$initialDropdownStates, s: author$project$Language$BrainFuck$table, N: '', e: author$project$BFRunner$initialRunningState};
+var author$project$Main$initialModel = {U: author$project$Main$initialDropdownStates, s: author$project$Language$BF$table, N: '', e: author$project$BFRunner$initialRunningState};
 var elm$core$Result$withDefault = F2(
 	function (def, result) {
 		if (!result.$) {
@@ -7126,7 +7126,7 @@ var author$project$Language$Ook$table = _Utils_Tuple2(
 		]),
 	'Ook!');
 var author$project$Main$bfTokenTableList = _List_fromArray(
-	[author$project$Language$BrainFuck$table, author$project$Language$HogyLang$table, author$project$Language$Ook$table]);
+	[author$project$Language$BF$table, author$project$Language$HogyLang$table, author$project$Language$Ook$table]);
 var author$project$BFParser$bfParseErrorToString = function (error) {
 	switch (error) {
 		case 0:
@@ -9305,7 +9305,7 @@ var author$project$Main$view = function (model) {
 								_List_Nil,
 								_List_fromArray(
 									[
-										elm$html$Html$text('Brainfuck/Ook! like language interpreter')
+										elm$html$Html$text('BF/Ook! like language interpreter')
 									]))
 							]))
 					])),
@@ -9387,7 +9387,7 @@ var author$project$Main$view = function (model) {
 										_List_Nil,
 										_List_fromArray(
 											[
-												elm$html$Html$text('Parsed Brainfuck commands')
+												elm$html$Html$text('Parsed commands')
 											]),
 										rundis$elm_bootstrap$Bootstrap$Card$config(
 											_List_fromArray(

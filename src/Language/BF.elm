@@ -1,4 +1,4 @@
-module Language.BrainFuck exposing (table)
+module Language.BF exposing (table)
 
 import BFTypes exposing (BFTokenKind(..), BFTokenTable)
 
@@ -14,5 +14,5 @@ table =
       , ( FetchInput, "," )
       , ( PrintCharacter, "." )
       ]
-    , "BrainFuck"
+    , "BF"
     )
