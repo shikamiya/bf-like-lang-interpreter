@@ -1,4 +1,4 @@
-module Main exposing (Model, Msg(..), bfTokenTableList, init, initialModel, main, subscriptions, update, view, viewOfBFCommand, viewOfBFTokenTableItem)
+module Main exposing (init)
 
 import Array exposing (Array)
 import BFParser exposing (..)
@@ -41,7 +41,7 @@ bfTokenTableList =
 -- Main
 
 
-main : Program (Maybe String) Model Msg
+main : Program Json.Decode.Value Model Msg
 main =
     Browser.element
         { init = init
@@ -71,16 +71,10 @@ type alias Model =
     }
 
 
-init : Maybe String -> ( Model, Cmd mgs )
-init maybeCache =
-    ( { initialModel
-        | programContent =
-            Maybe.withDefault "" maybeCache
-                |> Json.Decode.decodeString Json.Decode.string
-                |> Result.withDefault ""
-      }
-    , Cmd.none
-    )
+init : Json.Decode.Value -> ( Model, Cmd Msg )
+init flags =
+    decodeModel flags
+        |> withCmdNone
 
 
 initialModel : Model
@@ -90,6 +84,39 @@ initialModel =
     , dropdownStates = { parserTokenTable = Dropdown.initialState }
     , state = initialRunningState
     }
+
+
+encodeModel : Model -> Json.Encode.Value
+encodeModel model =
+    Json.Encode.object
+        [ ( "programContent", Json.Encode.string model.programContent ) ]
+
+
+decodeModel : Json.Decode.Value -> Model
+decodeModel value =
+    let
+        programContent =
+            Json.Decode.decodeValue Json.Decode.string value
+                |> Result.withDefault ""
+                |> Json.Decode.decodeString (Json.Decode.field "programContent" Json.Decode.string)
+                |> Result.withDefault ""
+    in
+    { initialModel | programContent = programContent }
+
+
+withCmdNone : Model -> ( Model, Cmd msg )
+withCmdNone model =
+    ( model, Cmd.none )
+
+
+withCacheCmd : Model -> ( Model, Cmd msg )
+withCacheCmd model =
+    ( model
+    , Cmd.batch
+        [ encodeModel model
+            |> cache
+        ]
+    )
 
 
 
@@ -109,58 +136,65 @@ type Msg
 
 update : Msg -> Model -> ( Model, Cmd msg )
 update msg model =
-    (\x -> ( x, Cmd.batch [ cache <| Json.Encode.string x.programContent ] )) <|
-        case msg of
-            UpdateProgramContent programContent ->
-                let
-                    commands =
-                        parseTokens model.parserTokenTable programContent
-                            |> Result.withDefault model.state.commands
+    case msg of
+        UpdateProgramContent programContent ->
+            let
+                commands =
+                    parseTokens model.parserTokenTable programContent
+                        |> Result.withDefault model.state.commands
 
-                    state =
-                        model.state
-                in
-                { model | programContent = programContent, state = { state | commands = commands } }
+                state =
+                    model.state
+            in
+            { model | programContent = programContent, state = { state | commands = commands } }
+                |> withCacheCmd
 
-            UpdateInput input ->
-                let
-                    state =
-                        model.state
-                in
-                { model | state = { state | input = input } }
+        UpdateInput input ->
+            let
+                state =
+                    model.state
+            in
+            { model | state = { state | input = input } }
+                |> withCmdNone
 
-            UpdateParserTokenTable table ->
-                { model | parserTokenTable = table }
+        UpdateParserTokenTable table ->
+            { model | parserTokenTable = table }
+                |> withCmdNone
 
-            UpdateParserTokenTableDropDownState state ->
-                let
-                    dropdownStates =
-                        model.dropdownStates
+        UpdateParserTokenTableDropDownState state ->
+            let
+                dropdownStates =
+                    model.dropdownStates
 
-                    newDropdownStates =
-                        { dropdownStates | parserTokenTable = state }
-                in
-                { model | dropdownStates = newDropdownStates }
+                newDropdownStates =
+                    { dropdownStates | parserTokenTable = state }
+            in
+            { model | dropdownStates = newDropdownStates }
+                |> withCmdNone
 
-            ResetAll ->
-                initialModel
+        ResetAll ->
+            initialModel
+                |> withCmdNone
 
-            ResetRunnningState ->
-                { model | state = { initialRunningState | commands = model.state.commands, input = model.state.input } }
+        ResetRunnningState ->
+            { model | state = { initialRunningState | commands = model.state.commands, input = model.state.input } }
+                |> withCmdNone
 
-            Run ->
-                let
-                    state =
-                        bfRun { initialRunningState | commands = model.state.commands, input = model.state.input }
-                in
-                { model | state = state }
+        Run ->
+            let
+                state =
+                    bfRun { initialRunningState | commands = model.state.commands, input = model.state.input }
+            in
+            { model | state = state }
+                |> withCmdNone
 
-            StepRun ->
-                let
-                    state =
-                        bfStepRun model.state
-                in
-                { model | state = state }
+        StepRun ->
+            let
+                state =
+                    bfStepRun model.state
+            in
+            { model | state = state }
+                |> withCmdNone
 
 
 
@@ -179,7 +213,7 @@ view model =
                 ]
             ]
         , Grid.row []
-            [ Grid.col [ Col.sm6 ]
+            [ Grid.col [ Col.lg6 ]
                 [ Card.config []
                     |> Card.header []
                         [ Dropdown.dropdown
@@ -202,7 +236,7 @@ view model =
                         ]
                     |> Card.view
                 ]
-            , Grid.col [ Col.sm6 ]
+            , Grid.col [ Col.lg6 ]
                 [ Card.config [ Card.attrs [ Html.Attributes.class "h-100" ] ]
                     |> Card.header [] [ text "Parsed Brainfuck commands" ]
                     |> Card.block []
@@ -224,7 +258,7 @@ view model =
                 ]
             ]
         , Grid.row []
-            [ Grid.col [ Col.sm6 ]
+            [ Grid.col [ Col.lg6 ]
                 [ Card.config []
                     |> Card.header [] [ text "Input" ]
                     |> Card.block []
@@ -237,7 +271,7 @@ view model =
                         ]
                     |> Card.view
                 ]
-            , Grid.col [ Col.sm6 ]
+            , Grid.col [ Col.lg6 ]
                 [ Card.config []
                     |> Card.header [] [ text "Output" ]
                     |> Card.block []
