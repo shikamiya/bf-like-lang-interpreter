@@ -1644,6 +1644,173 @@ var _Json_encodeNull = _Json_wrap(null);
 
 
 
+
+// STRINGS
+
+
+var _Parser_isSubString = F5(function(smallString, offset, row, col, bigString)
+{
+	var smallLength = smallString.length;
+	var isGood = offset + smallLength <= bigString.length;
+
+	for (var i = 0; isGood && i < smallLength; )
+	{
+		var code = bigString.charCodeAt(offset);
+		isGood =
+			smallString[i++] === bigString[offset++]
+			&& (
+				code === 0x000A /* \n */
+					? ( row++, col=1 )
+					: ( col++, (code & 0xF800) === 0xD800 ? smallString[i++] === bigString[offset++] : 1 )
+			)
+	}
+
+	return _Utils_Tuple3(isGood ? offset : -1, row, col);
+});
+
+
+
+// CHARS
+
+
+var _Parser_isSubChar = F3(function(predicate, offset, string)
+{
+	return (
+		string.length <= offset
+			? -1
+			:
+		(string.charCodeAt(offset) & 0xF800) === 0xD800
+			? (predicate(_Utils_chr(string.substr(offset, 2))) ? offset + 2 : -1)
+			:
+		(predicate(_Utils_chr(string[offset]))
+			? ((string[offset] === '\n') ? -2 : (offset + 1))
+			: -1
+		)
+	);
+});
+
+
+var _Parser_isAsciiCode = F3(function(code, offset, string)
+{
+	return string.charCodeAt(offset) === code;
+});
+
+
+
+// NUMBERS
+
+
+var _Parser_chompBase10 = F2(function(offset, string)
+{
+	for (; offset < string.length; offset++)
+	{
+		var code = string.charCodeAt(offset);
+		if (code < 0x30 || 0x39 < code)
+		{
+			return offset;
+		}
+	}
+	return offset;
+});
+
+
+var _Parser_consumeBase = F3(function(base, offset, string)
+{
+	for (var total = 0; offset < string.length; offset++)
+	{
+		var digit = string.charCodeAt(offset) - 0x30;
+		if (digit < 0 || base <= digit) break;
+		total = base * total + digit;
+	}
+	return _Utils_Tuple2(offset, total);
+});
+
+
+var _Parser_consumeBase16 = F2(function(offset, string)
+{
+	for (var total = 0; offset < string.length; offset++)
+	{
+		var code = string.charCodeAt(offset);
+		if (0x30 <= code && code <= 0x39)
+		{
+			total = 16 * total + code - 0x30;
+		}
+		else if (0x41 <= code && code <= 0x46)
+		{
+			total = 16 * total + code - 55;
+		}
+		else if (0x61 <= code && code <= 0x66)
+		{
+			total = 16 * total + code - 87;
+		}
+		else
+		{
+			break;
+		}
+	}
+	return _Utils_Tuple2(offset, total);
+});
+
+
+
+// FIND STRING
+
+
+var _Parser_findSubString = F5(function(smallString, offset, row, col, bigString)
+{
+	var newOffset = bigString.indexOf(smallString, offset);
+	var target = newOffset < 0 ? bigString.length : newOffset + smallString.length;
+
+	while (offset < target)
+	{
+		var code = bigString.charCodeAt(offset++);
+		code === 0x000A /* \n */
+			? ( col=1, row++ )
+			: ( col++, (code & 0xF800) === 0xD800 && offset++ )
+	}
+
+	return _Utils_Tuple3(newOffset, row, col);
+});
+
+
+
+var _Bitwise_and = F2(function(a, b)
+{
+	return a & b;
+});
+
+var _Bitwise_or = F2(function(a, b)
+{
+	return a | b;
+});
+
+var _Bitwise_xor = F2(function(a, b)
+{
+	return a ^ b;
+});
+
+function _Bitwise_complement(a)
+{
+	return ~a;
+};
+
+var _Bitwise_shiftLeftBy = F2(function(offset, a)
+{
+	return a << offset;
+});
+
+var _Bitwise_shiftRightBy = F2(function(offset, a)
+{
+	return a >> offset;
+});
+
+var _Bitwise_shiftRightZfBy = F2(function(offset, a)
+{
+	return a >>> offset;
+});
+
+
+
 // TASKS
 
 function _Scheduler_succeed(value)
@@ -4192,7 +4359,7 @@ function _Browser_getViewport()
 			bZ: _Browser_window.pageXOffset,
 			b_: _Browser_window.pageYOffset,
 			ai: _Browser_doc.documentElement.clientWidth,
-			W: _Browser_doc.documentElement.clientHeight
+			X: _Browser_doc.documentElement.clientHeight
 		}
 	};
 }
@@ -4203,7 +4370,7 @@ function _Browser_getScene()
 	var elem = _Browser_doc.documentElement;
 	return {
 		ai: Math.max(body.scrollWidth, body.offsetWidth, elem.scrollWidth, elem.offsetWidth, elem.clientWidth),
-		W: Math.max(body.scrollHeight, body.offsetHeight, elem.scrollHeight, elem.offsetHeight, elem.clientHeight)
+		X: Math.max(body.scrollHeight, body.offsetHeight, elem.scrollHeight, elem.offsetHeight, elem.clientHeight)
 	};
 }
 
@@ -4228,13 +4395,13 @@ function _Browser_getViewportOf(id)
 		return {
 			da: {
 				ai: node.scrollWidth,
-				W: node.scrollHeight
+				X: node.scrollHeight
 			},
 			dm: {
 				bZ: node.scrollLeft,
 				b_: node.scrollTop,
 				ai: node.clientWidth,
-				W: node.clientHeight
+				X: node.clientHeight
 			}
 		};
 	});
@@ -4269,13 +4436,13 @@ function _Browser_getElement(id)
 				bZ: x,
 				b_: y,
 				ai: _Browser_doc.documentElement.clientWidth,
-				W: _Browser_doc.documentElement.clientHeight
+				X: _Browser_doc.documentElement.clientHeight
 			},
 			du: {
 				bZ: x + rect.left,
 				b_: y + rect.top,
 				ai: rect.width,
-				W: rect.height
+				X: rect.height
 			}
 		};
 	});
@@ -4310,173 +4477,7 @@ function _Browser_load(url)
 		}
 	}));
 }
-
-
-
-
-// STRINGS
-
-
-var _Parser_isSubString = F5(function(smallString, offset, row, col, bigString)
-{
-	var smallLength = smallString.length;
-	var isGood = offset + smallLength <= bigString.length;
-
-	for (var i = 0; isGood && i < smallLength; )
-	{
-		var code = bigString.charCodeAt(offset);
-		isGood =
-			smallString[i++] === bigString[offset++]
-			&& (
-				code === 0x000A /* \n */
-					? ( row++, col=1 )
-					: ( col++, (code & 0xF800) === 0xD800 ? smallString[i++] === bigString[offset++] : 1 )
-			)
-	}
-
-	return _Utils_Tuple3(isGood ? offset : -1, row, col);
-});
-
-
-
-// CHARS
-
-
-var _Parser_isSubChar = F3(function(predicate, offset, string)
-{
-	return (
-		string.length <= offset
-			? -1
-			:
-		(string.charCodeAt(offset) & 0xF800) === 0xD800
-			? (predicate(_Utils_chr(string.substr(offset, 2))) ? offset + 2 : -1)
-			:
-		(predicate(_Utils_chr(string[offset]))
-			? ((string[offset] === '\n') ? -2 : (offset + 1))
-			: -1
-		)
-	);
-});
-
-
-var _Parser_isAsciiCode = F3(function(code, offset, string)
-{
-	return string.charCodeAt(offset) === code;
-});
-
-
-
-// NUMBERS
-
-
-var _Parser_chompBase10 = F2(function(offset, string)
-{
-	for (; offset < string.length; offset++)
-	{
-		var code = string.charCodeAt(offset);
-		if (code < 0x30 || 0x39 < code)
-		{
-			return offset;
-		}
-	}
-	return offset;
-});
-
-
-var _Parser_consumeBase = F3(function(base, offset, string)
-{
-	for (var total = 0; offset < string.length; offset++)
-	{
-		var digit = string.charCodeAt(offset) - 0x30;
-		if (digit < 0 || base <= digit) break;
-		total = base * total + digit;
-	}
-	return _Utils_Tuple2(offset, total);
-});
-
-
-var _Parser_consumeBase16 = F2(function(offset, string)
-{
-	for (var total = 0; offset < string.length; offset++)
-	{
-		var code = string.charCodeAt(offset);
-		if (0x30 <= code && code <= 0x39)
-		{
-			total = 16 * total + code - 0x30;
-		}
-		else if (0x41 <= code && code <= 0x46)
-		{
-			total = 16 * total + code - 55;
-		}
-		else if (0x61 <= code && code <= 0x66)
-		{
-			total = 16 * total + code - 87;
-		}
-		else
-		{
-			break;
-		}
-	}
-	return _Utils_Tuple2(offset, total);
-});
-
-
-
-// FIND STRING
-
-
-var _Parser_findSubString = F5(function(smallString, offset, row, col, bigString)
-{
-	var newOffset = bigString.indexOf(smallString, offset);
-	var target = newOffset < 0 ? bigString.length : newOffset + smallString.length;
-
-	while (offset < target)
-	{
-		var code = bigString.charCodeAt(offset++);
-		code === 0x000A /* \n */
-			? ( col=1, row++ )
-			: ( col++, (code & 0xF800) === 0xD800 && offset++ )
-	}
-
-	return _Utils_Tuple3(newOffset, row, col);
-});
-
-
-
-var _Bitwise_and = F2(function(a, b)
-{
-	return a & b;
-});
-
-var _Bitwise_or = F2(function(a, b)
-{
-	return a | b;
-});
-
-var _Bitwise_xor = F2(function(a, b)
-{
-	return a ^ b;
-});
-
-function _Bitwise_complement(a)
-{
-	return ~a;
-};
-
-var _Bitwise_shiftLeftBy = F2(function(offset, a)
-{
-	return a << offset;
-});
-
-var _Bitwise_shiftRightBy = F2(function(offset, a)
-{
-	return a >> offset;
-});
-
-var _Bitwise_shiftRightZfBy = F2(function(offset, a)
-{
-	return a >>> offset;
-});
+var author$project$Main$ParseTokens = {$: 1};
 var author$project$BFRunner$tapeSize = 30000;
 var author$project$BFTypes$BFTape = elm$core$Basics$identity;
 var elm$core$Array$branchFactor = 32;
@@ -4786,7 +4787,7 @@ var author$project$BFRunner$initialRunningState = {
 	i: _List_Nil,
 	dv: elm$core$Maybe$Nothing,
 	cN: '',
-	Y: 0,
+	Z: 0,
 	cd: '',
 	u: elm$core$Maybe$Nothing,
 	x: author$project$BFRunner$initialBFTape,
@@ -4817,7 +4818,7 @@ var rundis$elm_bootstrap$Bootstrap$Dropdown$Closed = 2;
 var rundis$elm_bootstrap$Bootstrap$Dropdown$State = elm$core$Basics$identity;
 var rundis$elm_bootstrap$Bootstrap$Utilities$DomHelper$Area = F4(
 	function (top, left, width, height) {
-		return {W: height, K: left, N: top, ai: width};
+		return {X: height, K: left, O: top, ai: width};
 	});
 var rundis$elm_bootstrap$Bootstrap$Dropdown$initialState = {
 	au: A4(rundis$elm_bootstrap$Bootstrap$Utilities$DomHelper$Area, 0, 0, 0, 0),
@@ -4825,7 +4826,7 @@ var rundis$elm_bootstrap$Bootstrap$Dropdown$initialState = {
 	bP: A4(rundis$elm_bootstrap$Bootstrap$Utilities$DomHelper$Area, 0, 0, 0, 0)
 };
 var author$project$Main$initialDropdownStates = {cC: rundis$elm_bootstrap$Bootstrap$Dropdown$initialState, s: rundis$elm_bootstrap$Bootstrap$Dropdown$initialState};
-var author$project$Main$initialModel = {T: author$project$Main$initialDropdownStates, s: author$project$Language$BrainFuck$table, ae: '', e: author$project$BFRunner$initialRunningState};
+var author$project$Main$initialModel = {U: author$project$Main$initialDropdownStates, s: author$project$Language$BrainFuck$table, N: '', e: author$project$BFRunner$initialRunningState};
 var elm$core$Result$withDefault = F2(
 	function (def, result) {
 		if (!result.$) {
@@ -5073,49 +5074,226 @@ var author$project$Main$decodeModel = function (value) {
 				A2(elm$json$Json$Decode$decodeValue, elm$json$Json$Decode$string, value))));
 	return _Utils_update(
 		author$project$Main$initialModel,
-		{ae: programContent});
+		{N: programContent});
 };
-var elm$core$Platform$Cmd$batch = _Platform_batch;
-var elm$core$Platform$Cmd$none = elm$core$Platform$Cmd$batch(_List_Nil);
-var author$project$Main$withCmdNone = function (model) {
-	return _Utils_Tuple2(model, elm$core$Platform$Cmd$none);
-};
-var author$project$Main$init = function (flags) {
-	return author$project$Main$withCmdNone(
-		author$project$Main$decodeModel(flags));
-};
-var author$project$Main$UpdateParserTokenTableDropDownState = function (a) {
-	return {$: 3, a: a};
-};
-var elm$core$Platform$Sub$batch = _Platform_batch;
-var elm$browser$Browser$AnimationManager$Time = function (a) {
-	return {$: 0, a: a};
-};
-var elm$browser$Browser$AnimationManager$State = F3(
-	function (subs, request, oldTime) {
-		return {cc: oldTime, c6: request, de: subs};
+var author$project$BFParser$BFCommandList = elm$core$Basics$identity;
+var author$project$BFParser$BFCommandStack = elm$core$Basics$identity;
+var author$project$BFParser$BFTokenParseMemo = F2(
+	function (stack, index) {
+		return {Y: index, t: stack};
 	});
-var elm$core$Task$succeed = _Scheduler_succeed;
-var elm$browser$Browser$AnimationManager$init = elm$core$Task$succeed(
-	A3(elm$browser$Browser$AnimationManager$State, _List_Nil, elm$core$Maybe$Nothing, 0));
-var elm$browser$Browser$External = function (a) {
-	return {$: 1, a: a};
-};
-var elm$browser$Browser$Internal = function (a) {
-	return {$: 0, a: a};
-};
-var elm$browser$Browser$Dom$NotFound = elm$core$Basics$identity;
-var elm$core$Basics$never = function (_n0) {
-	never:
-	while (true) {
-		var nvr = _n0;
-		var $temp$_n0 = nvr;
-		_n0 = $temp$_n0;
-		continue never;
+var author$project$BFParser$addCommandIntoList = F2(
+	function (list, cmd) {
+		var _n0 = list;
+		var commands = _n0;
+		return A2(elm$core$List$cons, cmd, commands);
+	});
+var elm$core$List$head = function (list) {
+	if (list.b) {
+		var x = list.a;
+		var xs = list.b;
+		return elm$core$Maybe$Just(x);
+	} else {
+		return elm$core$Maybe$Nothing;
 	}
 };
-var elm$core$Task$Perform = elm$core$Basics$identity;
-var elm$core$Task$init = elm$core$Task$succeed(0);
+var elm$core$List$tail = function (list) {
+	if (list.b) {
+		var x = list.a;
+		var xs = list.b;
+		return elm$core$Maybe$Just(xs);
+	} else {
+		return elm$core$Maybe$Nothing;
+	}
+};
+var elm$core$Maybe$withDefault = F2(
+	function (_default, maybe) {
+		if (!maybe.$) {
+			var value = maybe.a;
+			return value;
+		} else {
+			return _default;
+		}
+	});
+var author$project$BFParser$addCommandIntoCurrentList = F2(
+	function (stack, cmd) {
+		var _n0 = stack;
+		var stackList = _n0;
+		var ancestorsList = A2(
+			elm$core$Maybe$withDefault,
+			_List_Nil,
+			elm$core$List$tail(stackList));
+		var currentList = A2(
+			elm$core$Maybe$withDefault,
+			_List_Nil,
+			elm$core$List$head(stackList));
+		return A2(
+			elm$core$List$cons,
+			A2(author$project$BFParser$addCommandIntoList, currentList, cmd),
+			ancestorsList);
+	});
+var author$project$BFParser$beginNewLoopCommand = F2(
+	function (stack, cmd) {
+		var _n0 = stack;
+		var stackList = _n0;
+		return A2(
+			elm$core$List$cons,
+			_List_fromArray(
+				[cmd]),
+			stackList);
+	});
+var author$project$BFParser$reverseCommandList = function (list) {
+	var _n0 = list;
+	var commands = _n0;
+	return elm$core$Array$fromList(
+		elm$core$List$reverse(commands));
+};
+var author$project$BFTypes$BFLoopFunc = function (a) {
+	return {$: 1, a: a};
+};
+var author$project$BFParser$finalizeLoopCommand = F2(
+	function (stack, cmd) {
+		var _n0 = stack;
+		var stackList = _n0;
+		var ancestorsList = A2(
+			elm$core$Maybe$withDefault,
+			_List_Nil,
+			elm$core$List$tail(stackList));
+		var currentList = A2(
+			elm$core$Maybe$withDefault,
+			_List_Nil,
+			elm$core$List$head(stackList));
+		var commands = author$project$BFParser$reverseCommandList(
+			A2(author$project$BFParser$addCommandIntoList, currentList, cmd));
+		return A2(
+			author$project$BFParser$addCommandIntoCurrentList,
+			ancestorsList,
+			author$project$BFTypes$BFLoopFunc(commands));
+	});
+var author$project$BFParser$finalizeLoopCommandWithFullStack = F2(
+	function (stack, cmd) {
+		return A2(author$project$BFParser$finalizeLoopCommand, stack, cmd);
+	});
+var author$project$BFTypes$BFToken = F4(
+	function (kind, value, index, error) {
+		return {dv: error, Y: index, dF: kind, dT: value};
+	});
+var author$project$BFTypes$NoError = 0;
+var author$project$BFTypes$NoOp = 0;
+var elm$core$Basics$always = F2(
+	function (a, _n0) {
+		return a;
+	});
+var elm$parser$Parser$UnexpectedChar = {$: 11};
+var elm$core$Basics$negate = function (n) {
+	return -n;
+};
+var elm$parser$Parser$Advanced$Bad = F2(
+	function (a, b) {
+		return {$: 1, a: a, b: b};
+	});
+var elm$parser$Parser$Advanced$Good = F3(
+	function (a, b, c) {
+		return {$: 0, a: a, b: b, c: c};
+	});
+var elm$parser$Parser$Advanced$Parser = elm$core$Basics$identity;
+var elm$parser$Parser$Advanced$AddRight = F2(
+	function (a, b) {
+		return {$: 1, a: a, b: b};
+	});
+var elm$parser$Parser$Advanced$DeadEnd = F4(
+	function (row, col, problem, contextStack) {
+		return {cx: col, dt: contextStack, c0: problem, c8: row};
+	});
+var elm$parser$Parser$Advanced$Empty = {$: 0};
+var elm$parser$Parser$Advanced$fromState = F2(
+	function (s, x) {
+		return A2(
+			elm$parser$Parser$Advanced$AddRight,
+			elm$parser$Parser$Advanced$Empty,
+			A4(elm$parser$Parser$Advanced$DeadEnd, s.c8, s.cx, x, s.c));
+	});
+var elm$parser$Parser$Advanced$isSubChar = _Parser_isSubChar;
+var elm$parser$Parser$Advanced$chompIf = F2(
+	function (isGood, expecting) {
+		return function (s) {
+			var newOffset = A3(elm$parser$Parser$Advanced$isSubChar, isGood, s.b, s.a);
+			return _Utils_eq(newOffset, -1) ? A2(
+				elm$parser$Parser$Advanced$Bad,
+				false,
+				A2(elm$parser$Parser$Advanced$fromState, s, expecting)) : (_Utils_eq(newOffset, -2) ? A3(
+				elm$parser$Parser$Advanced$Good,
+				true,
+				0,
+				{cx: 1, c: s.c, d: s.d, b: s.b + 1, c8: s.c8 + 1, a: s.a}) : A3(
+				elm$parser$Parser$Advanced$Good,
+				true,
+				0,
+				{cx: s.cx + 1, c: s.c, d: s.d, b: newOffset, c8: s.c8, a: s.a}));
+		};
+	});
+var elm$parser$Parser$chompIf = function (isGood) {
+	return A2(elm$parser$Parser$Advanced$chompIf, isGood, elm$parser$Parser$UnexpectedChar);
+};
+var elm$core$String$slice = _String_slice;
+var elm$parser$Parser$Advanced$mapChompedString = F2(
+	function (func, _n0) {
+		var parse = _n0;
+		return function (s0) {
+			var _n1 = parse(s0);
+			if (_n1.$ === 1) {
+				var p = _n1.a;
+				var x = _n1.b;
+				return A2(elm$parser$Parser$Advanced$Bad, p, x);
+			} else {
+				var p = _n1.a;
+				var a = _n1.b;
+				var s1 = _n1.c;
+				return A3(
+					elm$parser$Parser$Advanced$Good,
+					p,
+					A2(
+						func,
+						A3(elm$core$String$slice, s0.b, s1.b, s0.a),
+						a),
+					s1);
+			}
+		};
+	});
+var elm$parser$Parser$Advanced$getChompedString = function (parser) {
+	return A2(elm$parser$Parser$Advanced$mapChompedString, elm$core$Basics$always, parser);
+};
+var elm$parser$Parser$getChompedString = elm$parser$Parser$Advanced$getChompedString;
+var elm$parser$Parser$Advanced$map = F2(
+	function (func, _n0) {
+		var parse = _n0;
+		return function (s0) {
+			var _n1 = parse(s0);
+			if (!_n1.$) {
+				var p = _n1.a;
+				var a = _n1.b;
+				var s1 = _n1.c;
+				return A3(
+					elm$parser$Parser$Advanced$Good,
+					p,
+					func(a),
+					s1);
+			} else {
+				var p = _n1.a;
+				var x = _n1.b;
+				return A2(elm$parser$Parser$Advanced$Bad, p, x);
+			}
+		};
+	});
+var elm$parser$Parser$map = elm$parser$Parser$Advanced$map;
+var author$project$BFParser$parseNoOpToken = A2(
+	elm$parser$Parser$map,
+	function (x) {
+		return A4(author$project$BFTypes$BFToken, 0, x, elm$core$Maybe$Nothing, 0);
+	},
+	elm$parser$Parser$getChompedString(
+		elm$parser$Parser$chompIf(
+			elm$core$Basics$always(true))));
 var elm$core$List$foldrHelper = F4(
 	function (fn, acc, ctr, ls) {
 		if (!ls.b) {
@@ -5185,6 +5363,972 @@ var elm$core$List$map = F2(
 			_List_Nil,
 			xs);
 	});
+var elm$core$Tuple$second = function (_n0) {
+	var y = _n0.b;
+	return y;
+};
+var elm$parser$Parser$Advanced$map2 = F3(
+	function (func, _n0, _n1) {
+		var parseA = _n0;
+		var parseB = _n1;
+		return function (s0) {
+			var _n2 = parseA(s0);
+			if (_n2.$ === 1) {
+				var p = _n2.a;
+				var x = _n2.b;
+				return A2(elm$parser$Parser$Advanced$Bad, p, x);
+			} else {
+				var p1 = _n2.a;
+				var a = _n2.b;
+				var s1 = _n2.c;
+				var _n3 = parseB(s1);
+				if (_n3.$ === 1) {
+					var p2 = _n3.a;
+					var x = _n3.b;
+					return A2(elm$parser$Parser$Advanced$Bad, p1 || p2, x);
+				} else {
+					var p2 = _n3.a;
+					var b = _n3.b;
+					var s2 = _n3.c;
+					return A3(
+						elm$parser$Parser$Advanced$Good,
+						p1 || p2,
+						A2(func, a, b),
+						s2);
+				}
+			}
+		};
+	});
+var elm$parser$Parser$Advanced$ignorer = F2(
+	function (keepParser, ignoreParser) {
+		return A3(elm$parser$Parser$Advanced$map2, elm$core$Basics$always, keepParser, ignoreParser);
+	});
+var elm$parser$Parser$ignorer = elm$parser$Parser$Advanced$ignorer;
+var elm$parser$Parser$Advanced$Append = F2(
+	function (a, b) {
+		return {$: 2, a: a, b: b};
+	});
+var elm$parser$Parser$Advanced$oneOfHelp = F3(
+	function (s0, bag, parsers) {
+		oneOfHelp:
+		while (true) {
+			if (!parsers.b) {
+				return A2(elm$parser$Parser$Advanced$Bad, false, bag);
+			} else {
+				var parse = parsers.a;
+				var remainingParsers = parsers.b;
+				var _n1 = parse(s0);
+				if (!_n1.$) {
+					var step = _n1;
+					return step;
+				} else {
+					var step = _n1;
+					var p = step.a;
+					var x = step.b;
+					if (p) {
+						return step;
+					} else {
+						var $temp$s0 = s0,
+							$temp$bag = A2(elm$parser$Parser$Advanced$Append, bag, x),
+							$temp$parsers = remainingParsers;
+						s0 = $temp$s0;
+						bag = $temp$bag;
+						parsers = $temp$parsers;
+						continue oneOfHelp;
+					}
+				}
+			}
+		}
+	});
+var elm$parser$Parser$Advanced$oneOf = function (parsers) {
+	return function (s) {
+		return A3(elm$parser$Parser$Advanced$oneOfHelp, s, elm$parser$Parser$Advanced$Empty, parsers);
+	};
+};
+var elm$parser$Parser$oneOf = elm$parser$Parser$Advanced$oneOf;
+var elm$parser$Parser$Advanced$succeed = function (a) {
+	return function (s) {
+		return A3(elm$parser$Parser$Advanced$Good, false, a, s);
+	};
+};
+var elm$parser$Parser$succeed = elm$parser$Parser$Advanced$succeed;
+var elm$parser$Parser$Expecting = function (a) {
+	return {$: 0, a: a};
+};
+var elm$parser$Parser$Advanced$Token = F2(
+	function (a, b) {
+		return {$: 0, a: a, b: b};
+	});
+var elm$parser$Parser$toToken = function (str) {
+	return A2(
+		elm$parser$Parser$Advanced$Token,
+		str,
+		elm$parser$Parser$Expecting(str));
+};
+var elm$core$Basics$not = _Basics_not;
+var elm$core$String$isEmpty = function (string) {
+	return string === '';
+};
+var elm$parser$Parser$Advanced$isSubString = _Parser_isSubString;
+var elm$parser$Parser$Advanced$token = function (_n0) {
+	var str = _n0.a;
+	var expecting = _n0.b;
+	var progress = !elm$core$String$isEmpty(str);
+	return function (s) {
+		var _n1 = A5(elm$parser$Parser$Advanced$isSubString, str, s.b, s.c8, s.cx, s.a);
+		var newOffset = _n1.a;
+		var newRow = _n1.b;
+		var newCol = _n1.c;
+		return _Utils_eq(newOffset, -1) ? A2(
+			elm$parser$Parser$Advanced$Bad,
+			false,
+			A2(elm$parser$Parser$Advanced$fromState, s, expecting)) : A3(
+			elm$parser$Parser$Advanced$Good,
+			progress,
+			0,
+			{cx: newCol, c: s.c, d: s.d, b: newOffset, c8: newRow, a: s.a});
+	};
+};
+var elm$parser$Parser$token = function (str) {
+	return elm$parser$Parser$Advanced$token(
+		elm$parser$Parser$toToken(str));
+};
+var author$project$BFParser$parseTokenByTable = function (table) {
+	var _n0 = table;
+	var tokenTable = _n0.a;
+	return elm$parser$Parser$oneOf(
+		A2(
+			elm$core$List$map,
+			function (x) {
+				var value = x.b;
+				var kind = x.a;
+				return A2(
+					elm$parser$Parser$ignorer,
+					elm$parser$Parser$succeed(
+						A4(author$project$BFTypes$BFToken, kind, value, elm$core$Maybe$Nothing, 0)),
+					elm$parser$Parser$token(value));
+			},
+			tokenTable));
+};
+var author$project$BFTypes$BFCommand = function (a) {
+	return {$: 0, a: a};
+};
+var author$project$BFTypes$InsufficientLoopEnd = 2;
+var author$project$BFTypes$TooManyLoopEnd = 1;
+var elm$parser$Parser$Done = function (a) {
+	return {$: 1, a: a};
+};
+var elm$parser$Parser$Loop = function (a) {
+	return {$: 0, a: a};
+};
+var elm$parser$Parser$ExpectingEnd = {$: 10};
+var elm$core$String$length = _String_length;
+var elm$parser$Parser$Advanced$end = function (x) {
+	return function (s) {
+		return _Utils_eq(
+			elm$core$String$length(s.a),
+			s.b) ? A3(elm$parser$Parser$Advanced$Good, false, 0, s) : A2(
+			elm$parser$Parser$Advanced$Bad,
+			false,
+			A2(elm$parser$Parser$Advanced$fromState, s, x));
+	};
+};
+var elm$parser$Parser$end = elm$parser$Parser$Advanced$end(elm$parser$Parser$ExpectingEnd);
+var elm$parser$Parser$Advanced$Done = function (a) {
+	return {$: 1, a: a};
+};
+var elm$parser$Parser$Advanced$Loop = function (a) {
+	return {$: 0, a: a};
+};
+var elm$parser$Parser$toAdvancedStep = function (step) {
+	if (!step.$) {
+		var s = step.a;
+		return elm$parser$Parser$Advanced$Loop(s);
+	} else {
+		var a = step.a;
+		return elm$parser$Parser$Advanced$Done(a);
+	}
+};
+var elm$parser$Parser$Advanced$loopHelp = F4(
+	function (p, state, callback, s0) {
+		loopHelp:
+		while (true) {
+			var _n0 = callback(state);
+			var parse = _n0;
+			var _n1 = parse(s0);
+			if (!_n1.$) {
+				var p1 = _n1.a;
+				var step = _n1.b;
+				var s1 = _n1.c;
+				if (!step.$) {
+					var newState = step.a;
+					var $temp$p = p || p1,
+						$temp$state = newState,
+						$temp$callback = callback,
+						$temp$s0 = s1;
+					p = $temp$p;
+					state = $temp$state;
+					callback = $temp$callback;
+					s0 = $temp$s0;
+					continue loopHelp;
+				} else {
+					var result = step.a;
+					return A3(elm$parser$Parser$Advanced$Good, p || p1, result, s1);
+				}
+			} else {
+				var p1 = _n1.a;
+				var x = _n1.b;
+				return A2(elm$parser$Parser$Advanced$Bad, p || p1, x);
+			}
+		}
+	});
+var elm$parser$Parser$Advanced$loop = F2(
+	function (state, callback) {
+		return function (s) {
+			return A4(elm$parser$Parser$Advanced$loopHelp, false, state, callback, s);
+		};
+	});
+var elm$parser$Parser$loop = F2(
+	function (state, callback) {
+		return A2(
+			elm$parser$Parser$Advanced$loop,
+			state,
+			function (s) {
+				return A2(
+					elm$parser$Parser$map,
+					elm$parser$Parser$toAdvancedStep,
+					callback(s));
+			});
+	});
+var author$project$BFParser$parseTokensHelper = function (cmdTable) {
+	return A2(
+		elm$parser$Parser$loop,
+		A2(
+			author$project$BFParser$BFTokenParseMemo,
+			_List_fromArray(
+				[_List_Nil]),
+			0),
+		function (memo) {
+			return elm$parser$Parser$oneOf(
+				_List_fromArray(
+					[
+						A2(
+						elm$parser$Parser$map,
+						function (token) {
+							var index = memo.Y;
+							var _n0 = memo.t;
+							var stackList = _n0;
+							var depth = elm$core$List$length(stackList);
+							var stack = function () {
+								var _n1 = token.dF;
+								switch (_n1) {
+									case 1:
+										return A2(
+											author$project$BFParser$beginNewLoopCommand,
+											memo.t,
+											author$project$BFTypes$BFCommand(
+												_Utils_update(
+													token,
+													{
+														Y: elm$core$Maybe$Just(index)
+													})));
+									case 2:
+										return (depth <= 1) ? A2(
+											author$project$BFParser$addCommandIntoCurrentList,
+											memo.t,
+											author$project$BFTypes$BFCommand(
+												_Utils_update(
+													token,
+													{dv: 1}))) : A2(
+											author$project$BFParser$finalizeLoopCommandWithFullStack,
+											memo.t,
+											author$project$BFTypes$BFCommand(
+												_Utils_update(
+													token,
+													{
+														Y: elm$core$Maybe$Just(index)
+													})));
+									default:
+										return A2(
+											author$project$BFParser$addCommandIntoCurrentList,
+											memo.t,
+											author$project$BFTypes$BFCommand(
+												_Utils_update(
+													token,
+													{
+														Y: elm$core$Maybe$Just(index)
+													})));
+								}
+							}();
+							return elm$parser$Parser$Loop(
+								_Utils_update(
+									memo,
+									{Y: index + 1, t: stack}));
+						},
+						author$project$BFParser$parseTokenByTable(cmdTable)),
+						A2(
+						elm$parser$Parser$map,
+						function (token) {
+							var stack = A2(
+								author$project$BFParser$addCommandIntoCurrentList,
+								memo.t,
+								author$project$BFTypes$BFCommand(token));
+							return elm$parser$Parser$Loop(
+								_Utils_update(
+									memo,
+									{t: stack}));
+						},
+						author$project$BFParser$parseNoOpToken),
+						A2(
+						elm$parser$Parser$map,
+						function (_n2) {
+							var finalizer = F2(
+								function (list, current) {
+									var _n4 = current;
+									var commands = _n4;
+									var commandLength = elm$core$List$length(commands);
+									if (!commandLength) {
+										return list;
+									} else {
+										var _n5 = A2(
+											author$project$BFParser$finalizeLoopCommand,
+											_List_fromArray(
+												[current, list]),
+											author$project$BFTypes$BFCommand(
+												A4(author$project$BFTypes$BFToken, 2, '(Loop wasn\'t closed)', elm$core$Maybe$Nothing, 2)));
+										var innerStackList = _n5;
+										return A2(
+											elm$core$Maybe$withDefault,
+											_List_Nil,
+											elm$core$List$head(innerStackList));
+									}
+								});
+							var _n3 = memo.t;
+							var stackList = _n3;
+							var result = A3(elm$core$List$foldl, finalizer, _List_Nil, stackList);
+							return elm$parser$Parser$Done(
+								author$project$BFParser$reverseCommandList(result));
+						},
+						elm$parser$Parser$end)
+					]));
+		});
+};
+var elm$parser$Parser$DeadEnd = F3(
+	function (row, col, problem) {
+		return {cx: col, c0: problem, c8: row};
+	});
+var elm$parser$Parser$problemToDeadEnd = function (p) {
+	return A3(elm$parser$Parser$DeadEnd, p.c8, p.cx, p.c0);
+};
+var elm$parser$Parser$Advanced$bagToList = F2(
+	function (bag, list) {
+		bagToList:
+		while (true) {
+			switch (bag.$) {
+				case 0:
+					return list;
+				case 1:
+					var bag1 = bag.a;
+					var x = bag.b;
+					var $temp$bag = bag1,
+						$temp$list = A2(elm$core$List$cons, x, list);
+					bag = $temp$bag;
+					list = $temp$list;
+					continue bagToList;
+				default:
+					var bag1 = bag.a;
+					var bag2 = bag.b;
+					var $temp$bag = bag1,
+						$temp$list = A2(elm$parser$Parser$Advanced$bagToList, bag2, list);
+					bag = $temp$bag;
+					list = $temp$list;
+					continue bagToList;
+			}
+		}
+	});
+var elm$parser$Parser$Advanced$run = F2(
+	function (_n0, src) {
+		var parse = _n0;
+		var _n1 = parse(
+			{cx: 1, c: _List_Nil, d: 1, b: 0, c8: 1, a: src});
+		if (!_n1.$) {
+			var value = _n1.b;
+			return elm$core$Result$Ok(value);
+		} else {
+			var bag = _n1.b;
+			return elm$core$Result$Err(
+				A2(elm$parser$Parser$Advanced$bagToList, bag, _List_Nil));
+		}
+	});
+var elm$parser$Parser$run = F2(
+	function (parser, source) {
+		var _n0 = A2(elm$parser$Parser$Advanced$run, parser, source);
+		if (!_n0.$) {
+			var a = _n0.a;
+			return elm$core$Result$Ok(a);
+		} else {
+			var problems = _n0.a;
+			return elm$core$Result$Err(
+				A2(elm$core$List$map, elm$parser$Parser$problemToDeadEnd, problems));
+		}
+	});
+var author$project$BFParser$parseTokens = function (table) {
+	return elm$parser$Parser$run(
+		author$project$BFParser$parseTokensHelper(table));
+};
+var author$project$BFRunner$decreaseTapePointer = function (current) {
+	return (0 < current) ? elm$core$Result$Ok(current - 1) : elm$core$Result$Err('Tape Pointer Under Limit Exceed');
+};
+var elm$core$Bitwise$shiftRightZfBy = _Bitwise_shiftRightZfBy;
+var elm$core$Array$bitMask = 4294967295 >>> (32 - elm$core$Array$shiftStep);
+var elm$core$Bitwise$and = _Bitwise_and;
+var elm$core$Elm$JsArray$unsafeGet = _JsArray_unsafeGet;
+var elm$core$Array$getHelp = F3(
+	function (shift, index, tree) {
+		getHelp:
+		while (true) {
+			var pos = elm$core$Array$bitMask & (index >>> shift);
+			var _n0 = A2(elm$core$Elm$JsArray$unsafeGet, pos, tree);
+			if (!_n0.$) {
+				var subTree = _n0.a;
+				var $temp$shift = shift - elm$core$Array$shiftStep,
+					$temp$index = index,
+					$temp$tree = subTree;
+				shift = $temp$shift;
+				index = $temp$index;
+				tree = $temp$tree;
+				continue getHelp;
+			} else {
+				var values = _n0.a;
+				return A2(elm$core$Elm$JsArray$unsafeGet, elm$core$Array$bitMask & index, values);
+			}
+		}
+	});
+var elm$core$Bitwise$shiftLeftBy = _Bitwise_shiftLeftBy;
+var elm$core$Array$tailIndex = function (len) {
+	return (len >>> 5) << 5;
+};
+var elm$core$Basics$ge = _Utils_ge;
+var elm$core$Array$get = F2(
+	function (index, _n0) {
+		var len = _n0.a;
+		var startShift = _n0.b;
+		var tree = _n0.c;
+		var tail = _n0.d;
+		return ((index < 0) || (_Utils_cmp(index, len) > -1)) ? elm$core$Maybe$Nothing : ((_Utils_cmp(
+			index,
+			elm$core$Array$tailIndex(len)) > -1) ? elm$core$Maybe$Just(
+			A2(elm$core$Elm$JsArray$unsafeGet, elm$core$Array$bitMask & index, tail)) : elm$core$Maybe$Just(
+			A3(elm$core$Array$getHelp, startShift, index, tree)));
+	});
+var elm$core$Elm$JsArray$unsafeSet = _JsArray_unsafeSet;
+var elm$core$Array$setHelp = F4(
+	function (shift, index, value, tree) {
+		var pos = elm$core$Array$bitMask & (index >>> shift);
+		var _n0 = A2(elm$core$Elm$JsArray$unsafeGet, pos, tree);
+		if (!_n0.$) {
+			var subTree = _n0.a;
+			var newSub = A4(elm$core$Array$setHelp, shift - elm$core$Array$shiftStep, index, value, subTree);
+			return A3(
+				elm$core$Elm$JsArray$unsafeSet,
+				pos,
+				elm$core$Array$SubTree(newSub),
+				tree);
+		} else {
+			var values = _n0.a;
+			var newLeaf = A3(elm$core$Elm$JsArray$unsafeSet, elm$core$Array$bitMask & index, value, values);
+			return A3(
+				elm$core$Elm$JsArray$unsafeSet,
+				pos,
+				elm$core$Array$Leaf(newLeaf),
+				tree);
+		}
+	});
+var elm$core$Array$set = F3(
+	function (index, value, array) {
+		var len = array.a;
+		var startShift = array.b;
+		var tree = array.c;
+		var tail = array.d;
+		return ((index < 0) || (_Utils_cmp(index, len) > -1)) ? array : ((_Utils_cmp(
+			index,
+			elm$core$Array$tailIndex(len)) > -1) ? A4(
+			elm$core$Array$Array_elm_builtin,
+			len,
+			startShift,
+			tree,
+			A3(elm$core$Elm$JsArray$unsafeSet, elm$core$Array$bitMask & index, value, tail)) : A4(
+			elm$core$Array$Array_elm_builtin,
+			len,
+			startShift,
+			A4(elm$core$Array$setHelp, startShift, index, value, tree),
+			tail));
+	});
+var author$project$BFRunner$decreaseTapeValue = F2(
+	function (tape, pos) {
+		var _n0 = tape;
+		var tapeArray = _n0;
+		var value = A2(
+			elm$core$Maybe$withDefault,
+			0,
+			A2(elm$core$Array$get, pos, tapeArray));
+		return (value < 1) ? A3(elm$core$Array$set, pos, 255, tapeArray) : A3(elm$core$Array$set, pos, value - 1, tapeArray);
+	});
+var author$project$BFRunner$getBFCommandByRevIndices = F2(
+	function (cmds, pos) {
+		getBFCommandByRevIndices:
+		while (true) {
+			if (pos.b) {
+				var currentPos = pos.a;
+				var remainingPos = pos.b;
+				var _n1 = A2(elm$core$Array$get, currentPos, cmds);
+				if (!_n1.$) {
+					if (_n1.a.$ === 1) {
+						var newCmds = _n1.a.a;
+						var $temp$cmds = newCmds,
+							$temp$pos = remainingPos;
+						cmds = $temp$cmds;
+						pos = $temp$pos;
+						continue getBFCommandByRevIndices;
+					} else {
+						var cmd = _n1.a;
+						return elm$core$Maybe$Just(cmd);
+					}
+				} else {
+					return elm$core$Maybe$Nothing;
+				}
+			} else {
+				return elm$core$Maybe$Just(
+					author$project$BFTypes$BFLoopFunc(cmds));
+			}
+		}
+	});
+var author$project$BFRunner$getBFCommandByIndices = F2(
+	function (cmds, pos) {
+		return A2(
+			author$project$BFRunner$getBFCommandByRevIndices,
+			cmds,
+			elm$core$List$reverse(pos));
+	});
+var author$project$BFRunner$increaseBFCommandIndices = function (pos) {
+	if (pos.b) {
+		var head = pos.a;
+		var tail = pos.b;
+		return A2(elm$core$List$cons, head + 1, tail);
+	} else {
+		return _List_fromArray(
+			[0]);
+	}
+};
+var author$project$BFRunner$getNextIndices = F2(
+	function (cmds, pos) {
+		return A2(
+			author$project$BFRunner$skipUntilNextBFCommand,
+			cmds,
+			author$project$BFRunner$increaseBFCommandIndices(pos));
+	});
+var author$project$BFRunner$skipUntilNextBFCommand = F2(
+	function (cmds, pos) {
+		var cmd = A2(author$project$BFRunner$getBFCommandByIndices, cmds, pos);
+		if (cmd.$ === 1) {
+			var _n1 = elm$core$List$tail(pos);
+			if ((!_n1.$) && _n1.a.b) {
+				var parentPos = _n1.a;
+				return A2(author$project$BFRunner$getNextIndices, cmds, parentPos);
+			} else {
+				return pos;
+			}
+		} else {
+			if (!cmd.a.$) {
+				var token = cmd.a.a;
+				var _n2 = token.dF;
+				if (!_n2) {
+					return A2(author$project$BFRunner$getNextIndices, cmds, pos);
+				} else {
+					return pos;
+				}
+			} else {
+				return A2(
+					author$project$BFRunner$skipUntilNextBFCommand,
+					cmds,
+					A2(elm$core$List$cons, 0, pos));
+			}
+		}
+	});
+var author$project$BFRunner$getTapeValue = F2(
+	function (tape, pos) {
+		var _n0 = tape;
+		var tapeArray = _n0;
+		var value = A2(
+			elm$core$Maybe$withDefault,
+			0,
+			A2(elm$core$Array$get, pos, tapeArray));
+		return value;
+	});
+var author$project$BFRunner$increaseTapePointer = function (current) {
+	return (_Utils_cmp(current + 1, author$project$BFRunner$tapeSize) < 0) ? elm$core$Result$Ok(current + 1) : elm$core$Result$Err('Tape Pointer Limit Exceed');
+};
+var author$project$BFRunner$increaseTapeValue = F2(
+	function (tape, pos) {
+		var _n0 = tape;
+		var tapeArray = _n0;
+		var value = A2(
+			elm$core$Maybe$withDefault,
+			0,
+			A2(elm$core$Array$get, pos, tapeArray));
+		return (255 < (value + 1)) ? A3(elm$core$Array$set, pos, 0, tapeArray) : A3(elm$core$Array$set, pos, value + 1, tapeArray);
+	});
+var elm$core$Basics$modBy = _Basics_modBy;
+var author$project$BFRunner$setTapeValue = F3(
+	function (tape, pos, value) {
+		var modValue = A2(elm$core$Basics$modBy, 256, value);
+		var _n0 = tape;
+		var tapeArray = _n0;
+		var newTape = A3(elm$core$Array$set, pos, modValue, tapeArray);
+		return newTape;
+	});
+var elm$core$Char$fromCode = _Char_fromCode;
+var elm$core$String$append = _String_append;
+var elm$core$String$dropLeft = F2(
+	function (n, string) {
+		return (n < 1) ? string : A3(
+			elm$core$String$slice,
+			n,
+			elm$core$String$length(string),
+			string);
+	});
+var elm$core$String$cons = _String_cons;
+var elm$core$String$fromChar = function (_char) {
+	return A2(elm$core$String$cons, _char, '');
+};
+var author$project$BFRunner$bfStepRun = function (state) {
+	bfStepRun:
+	while (true) {
+		var inputStr = state.cN;
+		var cmds = state.cz;
+		var indices = A2(author$project$BFRunner$getNextIndices, cmds, state.i);
+		var cmd = A2(author$project$BFRunner$getBFCommandByIndices, cmds, indices);
+		if (!cmd.$) {
+			if (!cmd.a.$) {
+				var token = cmd.a.a;
+				var _n1 = token.dF;
+				switch (_n1) {
+					case 0:
+						var nextState = _Utils_update(
+							state,
+							{i: indices});
+						var $temp$state = nextState;
+						state = $temp$state;
+						continue bfStepRun;
+					case 1:
+						var _n2 = A2(author$project$BFRunner$getTapeValue, state.x, state.v);
+						if (!_n2) {
+							var nextIndices = A2(
+								elm$core$Maybe$withDefault,
+								_List_Nil,
+								elm$core$List$tail(indices));
+							var nextState = _Utils_update(
+								state,
+								{i: nextIndices});
+							var $temp$state = nextState;
+							state = $temp$state;
+							continue bfStepRun;
+						} else {
+							var $temp$state = _Utils_update(
+								state,
+								{i: indices});
+							state = $temp$state;
+							continue bfStepRun;
+						}
+					case 2:
+						var loopStartIndices = A2(
+							elm$core$List$cons,
+							-1,
+							A2(
+								elm$core$Maybe$withDefault,
+								_List_Nil,
+								elm$core$List$tail(indices)));
+						var nextState = _Utils_update(
+							state,
+							{i: loopStartIndices});
+						var $temp$state = nextState;
+						state = $temp$state;
+						continue bfStepRun;
+					case 5:
+						var _n3 = author$project$BFRunner$increaseTapePointer(state.v);
+						if (!_n3.$) {
+							var ptr = _n3.a;
+							return _Utils_update(
+								state,
+								{i: indices, u: token.Y, v: ptr});
+						} else {
+							var error = _n3.a;
+							return _Utils_update(
+								state,
+								{
+									i: indices,
+									dv: elm$core$Maybe$Just(error),
+									u: token.Y
+								});
+						}
+					case 6:
+						var _n4 = author$project$BFRunner$decreaseTapePointer(state.v);
+						if (!_n4.$) {
+							var ptr = _n4.a;
+							return _Utils_update(
+								state,
+								{i: indices, u: token.Y, v: ptr});
+						} else {
+							var error = _n4.a;
+							return _Utils_update(
+								state,
+								{
+									i: indices,
+									dv: elm$core$Maybe$Just(error),
+									u: token.Y
+								});
+						}
+					case 3:
+						return _Utils_update(
+							state,
+							{
+								i: indices,
+								u: token.Y,
+								x: A2(author$project$BFRunner$increaseTapeValue, state.x, state.v)
+							});
+					case 4:
+						return _Utils_update(
+							state,
+							{
+								i: indices,
+								u: token.Y,
+								x: A2(author$project$BFRunner$decreaseTapeValue, state.x, state.v)
+							});
+					case 7:
+						var maybeInput = elm$core$String$uncons(
+							A2(elm$core$String$dropLeft, state.Z, inputStr));
+						if (!maybeInput.$) {
+							var _n6 = maybeInput.a;
+							var input = _n6.a;
+							return _Utils_update(
+								state,
+								{
+									i: indices,
+									Z: state.Z + 1,
+									u: token.Y,
+									x: A3(
+										author$project$BFRunner$setTapeValue,
+										state.x,
+										state.v,
+										elm$core$Char$toCode(input))
+								});
+						} else {
+							return _Utils_update(
+								state,
+								{i: indices, Z: state.Z + 1, u: token.Y});
+						}
+					default:
+						var outputChar = elm$core$String$fromChar(
+							elm$core$Char$fromCode(
+								A2(author$project$BFRunner$getTapeValue, state.x, state.v)));
+						var output = A2(elm$core$String$append, state.cd, outputChar);
+						return _Utils_update(
+							state,
+							{i: indices, cd: output, u: token.Y});
+				}
+			} else {
+				var nextState = _Utils_update(
+					state,
+					{i: indices});
+				var $temp$state = nextState;
+				state = $temp$state;
+				continue bfStepRun;
+			}
+		} else {
+			return _Utils_update(
+				state,
+				{
+					dv: elm$core$Maybe$Just('[End]')
+				});
+		}
+	}
+};
+var author$project$BFRunner$bfRun = function (state) {
+	bfRun:
+	while (true) {
+		var newState = author$project$BFRunner$bfStepRun(state);
+		var _n0 = newState.dv;
+		if (_n0.$ === 1) {
+			var $temp$state = newState;
+			state = $temp$state;
+			continue bfRun;
+		} else {
+			return newState;
+		}
+	}
+};
+var author$project$Cacher$cache = _Platform_outgoingPort('cache', elm$core$Basics$identity);
+var elm$json$Json$Encode$object = function (pairs) {
+	return _Json_wrap(
+		A3(
+			elm$core$List$foldl,
+			F2(
+				function (_n0, obj) {
+					var k = _n0.a;
+					var v = _n0.b;
+					return A3(_Json_addField, k, v, obj);
+				}),
+			_Json_emptyObject(0),
+			pairs));
+};
+var elm$json$Json$Encode$string = _Json_wrap;
+var author$project$Main$encodeModel = function (model) {
+	return elm$json$Json$Encode$object(
+		_List_fromArray(
+			[
+				_Utils_Tuple2(
+				'programContent',
+				elm$json$Json$Encode$string(model.N))
+			]));
+};
+var elm$core$Platform$Cmd$batch = _Platform_batch;
+var author$project$Main$withCacheCmd = function (model) {
+	return _Utils_Tuple2(
+		model,
+		elm$core$Platform$Cmd$batch(
+			_List_fromArray(
+				[
+					author$project$Cacher$cache(
+					author$project$Main$encodeModel(model))
+				])));
+};
+var elm$core$Platform$Cmd$none = elm$core$Platform$Cmd$batch(_List_Nil);
+var author$project$Main$withCmdNone = function (model) {
+	return _Utils_Tuple2(model, elm$core$Platform$Cmd$none);
+};
+var author$project$Main$update = F2(
+	function (msg, model) {
+		switch (msg.$) {
+			case 0:
+				var programContent = msg.a;
+				return author$project$Main$withCacheCmd(
+					A2(
+						author$project$Main$update,
+						author$project$Main$ParseTokens,
+						_Utils_update(
+							model,
+							{N: programContent})).a);
+			case 1:
+				var state = model.e;
+				var commands = A2(
+					elm$core$Result$withDefault,
+					model.e.cz,
+					A2(author$project$BFParser$parseTokens, model.s, model.N));
+				return author$project$Main$withCmdNone(
+					_Utils_update(
+						model,
+						{
+							e: _Utils_update(
+								state,
+								{cz: commands})
+						}));
+			case 2:
+				var input = msg.a;
+				var state = model.e;
+				return author$project$Main$withCmdNone(
+					_Utils_update(
+						model,
+						{
+							e: _Utils_update(
+								state,
+								{cN: input})
+						}));
+			case 3:
+				var table = msg.a;
+				return author$project$Main$withCmdNone(
+					A2(
+						author$project$Main$update,
+						author$project$Main$ParseTokens,
+						_Utils_update(
+							model,
+							{s: table})).a);
+			case 4:
+				var state = msg.a;
+				var dropdownStates = model.U;
+				var newDropdownStates = _Utils_update(
+					dropdownStates,
+					{s: state});
+				return author$project$Main$withCmdNone(
+					_Utils_update(
+						model,
+						{U: newDropdownStates}));
+			case 5:
+				return author$project$Main$withCmdNone(author$project$Main$initialModel);
+			case 6:
+				return author$project$Main$withCmdNone(
+					_Utils_update(
+						model,
+						{
+							e: _Utils_update(
+								author$project$BFRunner$initialRunningState,
+								{cz: model.e.cz, cN: model.e.cN})
+						}));
+			case 7:
+				var state = author$project$BFRunner$bfRun(
+					_Utils_update(
+						author$project$BFRunner$initialRunningState,
+						{cz: model.e.cz, cN: model.e.cN}));
+				return author$project$Main$withCmdNone(
+					_Utils_update(
+						model,
+						{e: state}));
+			default:
+				var state = author$project$BFRunner$bfStepRun(model.e);
+				return author$project$Main$withCmdNone(
+					_Utils_update(
+						model,
+						{e: state}));
+		}
+	});
+var author$project$Main$init = function (flags) {
+	return author$project$Main$withCmdNone(
+		A2(
+			author$project$Main$update,
+			author$project$Main$ParseTokens,
+			author$project$Main$decodeModel(flags)).a);
+};
+var author$project$Main$UpdateParserTokenTableDropDownState = function (a) {
+	return {$: 4, a: a};
+};
+var elm$core$Platform$Sub$batch = _Platform_batch;
+var elm$browser$Browser$AnimationManager$Time = function (a) {
+	return {$: 0, a: a};
+};
+var elm$browser$Browser$AnimationManager$State = F3(
+	function (subs, request, oldTime) {
+		return {cc: oldTime, c6: request, de: subs};
+	});
+var elm$core$Task$succeed = _Scheduler_succeed;
+var elm$browser$Browser$AnimationManager$init = elm$core$Task$succeed(
+	A3(elm$browser$Browser$AnimationManager$State, _List_Nil, elm$core$Maybe$Nothing, 0));
+var elm$browser$Browser$External = function (a) {
+	return {$: 1, a: a};
+};
+var elm$browser$Browser$Internal = function (a) {
+	return {$: 0, a: a};
+};
+var elm$browser$Browser$Dom$NotFound = elm$core$Basics$identity;
+var elm$core$Basics$never = function (_n0) {
+	never:
+	while (true) {
+		var nvr = _n0;
+		var $temp$_n0 = nvr;
+		_n0 = $temp$_n0;
+		continue never;
+	}
+};
+var elm$core$Task$Perform = elm$core$Basics$identity;
+var elm$core$Task$init = elm$core$Task$succeed(0);
 var elm$core$Task$andThen = _Scheduler_andThen;
 var elm$core$Task$map = F2(
 	function (func, taskA) {
@@ -5272,23 +6416,10 @@ var elm$virtual_dom$VirtualDom$toHandlerInt = function (handler) {
 			return 3;
 	}
 };
-var elm$core$String$length = _String_length;
-var elm$core$String$slice = _String_slice;
-var elm$core$String$dropLeft = F2(
-	function (n, string) {
-		return (n < 1) ? string : A3(
-			elm$core$String$slice,
-			n,
-			elm$core$String$length(string),
-			string);
-	});
 var elm$core$String$startsWith = _String_startsWith;
 var elm$url$Url$Http = 0;
 var elm$url$Url$Https = 1;
 var elm$core$String$indexes = _String_indexes;
-var elm$core$String$isEmpty = function (string) {
-	return string === '';
-};
 var elm$core$String$left = F2(
 	function (n, string) {
 		return (n < 1) ? '' : A3(elm$core$String$slice, 0, n, string);
@@ -5955,1132 +7086,15 @@ var author$project$Main$subscriptions = function (model) {
 	return elm$core$Platform$Sub$batch(
 		_List_fromArray(
 			[
-				A2(rundis$elm_bootstrap$Bootstrap$Dropdown$subscriptions, model.T.s, author$project$Main$UpdateParserTokenTableDropDownState)
+				A2(rundis$elm_bootstrap$Bootstrap$Dropdown$subscriptions, model.U.s, author$project$Main$UpdateParserTokenTableDropDownState)
 			]));
 };
-var author$project$BFParser$BFCommandList = elm$core$Basics$identity;
-var author$project$BFParser$BFCommandStack = elm$core$Basics$identity;
-var author$project$BFParser$BFTokenParseMemo = F2(
-	function (stack, index) {
-		return {X: index, t: stack};
-	});
-var author$project$BFParser$addCommandIntoList = F2(
-	function (list, cmd) {
-		var _n0 = list;
-		var commands = _n0;
-		return A2(elm$core$List$cons, cmd, commands);
-	});
-var elm$core$List$head = function (list) {
-	if (list.b) {
-		var x = list.a;
-		var xs = list.b;
-		return elm$core$Maybe$Just(x);
-	} else {
-		return elm$core$Maybe$Nothing;
-	}
-};
-var elm$core$List$tail = function (list) {
-	if (list.b) {
-		var x = list.a;
-		var xs = list.b;
-		return elm$core$Maybe$Just(xs);
-	} else {
-		return elm$core$Maybe$Nothing;
-	}
-};
-var elm$core$Maybe$withDefault = F2(
-	function (_default, maybe) {
-		if (!maybe.$) {
-			var value = maybe.a;
-			return value;
-		} else {
-			return _default;
-		}
-	});
-var author$project$BFParser$addCommandIntoCurrentList = F2(
-	function (stack, cmd) {
-		var _n0 = stack;
-		var stackList = _n0;
-		var ancestorsList = A2(
-			elm$core$Maybe$withDefault,
-			_List_Nil,
-			elm$core$List$tail(stackList));
-		var currentList = A2(
-			elm$core$Maybe$withDefault,
-			_List_Nil,
-			elm$core$List$head(stackList));
-		return A2(
-			elm$core$List$cons,
-			A2(author$project$BFParser$addCommandIntoList, currentList, cmd),
-			ancestorsList);
-	});
-var author$project$BFParser$beginNewLoopCommand = F2(
-	function (stack, cmd) {
-		var _n0 = stack;
-		var stackList = _n0;
-		return A2(
-			elm$core$List$cons,
-			_List_fromArray(
-				[cmd]),
-			stackList);
-	});
-var author$project$BFParser$reverseCommandList = function (list) {
-	var _n0 = list;
-	var commands = _n0;
-	return elm$core$Array$fromList(
-		elm$core$List$reverse(commands));
-};
-var author$project$BFTypes$BFLoopFunc = function (a) {
-	return {$: 1, a: a};
-};
-var author$project$BFParser$finalizeLoopCommand = F2(
-	function (stack, cmd) {
-		var _n0 = stack;
-		var stackList = _n0;
-		var ancestorsList = A2(
-			elm$core$Maybe$withDefault,
-			_List_Nil,
-			elm$core$List$tail(stackList));
-		var currentList = A2(
-			elm$core$Maybe$withDefault,
-			_List_Nil,
-			elm$core$List$head(stackList));
-		var commands = author$project$BFParser$reverseCommandList(
-			A2(author$project$BFParser$addCommandIntoList, currentList, cmd));
-		return A2(
-			author$project$BFParser$addCommandIntoCurrentList,
-			ancestorsList,
-			author$project$BFTypes$BFLoopFunc(commands));
-	});
-var author$project$BFParser$finalizeLoopCommandWithFullStack = F2(
-	function (stack, cmd) {
-		return A2(author$project$BFParser$finalizeLoopCommand, stack, cmd);
-	});
-var author$project$BFTypes$BFToken = F4(
-	function (kind, value, index, error) {
-		return {dv: error, X: index, dF: kind, dT: value};
-	});
-var author$project$BFTypes$NoError = 0;
-var author$project$BFTypes$NoOp = 0;
-var elm$core$Basics$always = F2(
-	function (a, _n0) {
-		return a;
-	});
-var elm$parser$Parser$UnexpectedChar = {$: 11};
-var elm$core$Basics$negate = function (n) {
-	return -n;
-};
-var elm$parser$Parser$Advanced$Bad = F2(
-	function (a, b) {
-		return {$: 1, a: a, b: b};
-	});
-var elm$parser$Parser$Advanced$Good = F3(
-	function (a, b, c) {
-		return {$: 0, a: a, b: b, c: c};
-	});
-var elm$parser$Parser$Advanced$Parser = elm$core$Basics$identity;
-var elm$parser$Parser$Advanced$AddRight = F2(
-	function (a, b) {
-		return {$: 1, a: a, b: b};
-	});
-var elm$parser$Parser$Advanced$DeadEnd = F4(
-	function (row, col, problem, contextStack) {
-		return {cx: col, dt: contextStack, c0: problem, c8: row};
-	});
-var elm$parser$Parser$Advanced$Empty = {$: 0};
-var elm$parser$Parser$Advanced$fromState = F2(
-	function (s, x) {
-		return A2(
-			elm$parser$Parser$Advanced$AddRight,
-			elm$parser$Parser$Advanced$Empty,
-			A4(elm$parser$Parser$Advanced$DeadEnd, s.c8, s.cx, x, s.c));
-	});
-var elm$parser$Parser$Advanced$isSubChar = _Parser_isSubChar;
-var elm$parser$Parser$Advanced$chompIf = F2(
-	function (isGood, expecting) {
-		return function (s) {
-			var newOffset = A3(elm$parser$Parser$Advanced$isSubChar, isGood, s.b, s.a);
-			return _Utils_eq(newOffset, -1) ? A2(
-				elm$parser$Parser$Advanced$Bad,
-				false,
-				A2(elm$parser$Parser$Advanced$fromState, s, expecting)) : (_Utils_eq(newOffset, -2) ? A3(
-				elm$parser$Parser$Advanced$Good,
-				true,
-				0,
-				{cx: 1, c: s.c, d: s.d, b: s.b + 1, c8: s.c8 + 1, a: s.a}) : A3(
-				elm$parser$Parser$Advanced$Good,
-				true,
-				0,
-				{cx: s.cx + 1, c: s.c, d: s.d, b: newOffset, c8: s.c8, a: s.a}));
-		};
-	});
-var elm$parser$Parser$chompIf = function (isGood) {
-	return A2(elm$parser$Parser$Advanced$chompIf, isGood, elm$parser$Parser$UnexpectedChar);
-};
-var elm$parser$Parser$Advanced$mapChompedString = F2(
-	function (func, _n0) {
-		var parse = _n0;
-		return function (s0) {
-			var _n1 = parse(s0);
-			if (_n1.$ === 1) {
-				var p = _n1.a;
-				var x = _n1.b;
-				return A2(elm$parser$Parser$Advanced$Bad, p, x);
-			} else {
-				var p = _n1.a;
-				var a = _n1.b;
-				var s1 = _n1.c;
-				return A3(
-					elm$parser$Parser$Advanced$Good,
-					p,
-					A2(
-						func,
-						A3(elm$core$String$slice, s0.b, s1.b, s0.a),
-						a),
-					s1);
-			}
-		};
-	});
-var elm$parser$Parser$Advanced$getChompedString = function (parser) {
-	return A2(elm$parser$Parser$Advanced$mapChompedString, elm$core$Basics$always, parser);
-};
-var elm$parser$Parser$getChompedString = elm$parser$Parser$Advanced$getChompedString;
-var elm$parser$Parser$Advanced$map = F2(
-	function (func, _n0) {
-		var parse = _n0;
-		return function (s0) {
-			var _n1 = parse(s0);
-			if (!_n1.$) {
-				var p = _n1.a;
-				var a = _n1.b;
-				var s1 = _n1.c;
-				return A3(
-					elm$parser$Parser$Advanced$Good,
-					p,
-					func(a),
-					s1);
-			} else {
-				var p = _n1.a;
-				var x = _n1.b;
-				return A2(elm$parser$Parser$Advanced$Bad, p, x);
-			}
-		};
-	});
-var elm$parser$Parser$map = elm$parser$Parser$Advanced$map;
-var author$project$BFParser$parseNoOpToken = A2(
-	elm$parser$Parser$map,
-	function (x) {
-		return A4(author$project$BFTypes$BFToken, 0, x, elm$core$Maybe$Nothing, 0);
-	},
-	elm$parser$Parser$getChompedString(
-		elm$parser$Parser$chompIf(
-			elm$core$Basics$always(true))));
-var elm$core$Tuple$second = function (_n0) {
-	var y = _n0.b;
-	return y;
-};
-var elm$parser$Parser$Advanced$map2 = F3(
-	function (func, _n0, _n1) {
-		var parseA = _n0;
-		var parseB = _n1;
-		return function (s0) {
-			var _n2 = parseA(s0);
-			if (_n2.$ === 1) {
-				var p = _n2.a;
-				var x = _n2.b;
-				return A2(elm$parser$Parser$Advanced$Bad, p, x);
-			} else {
-				var p1 = _n2.a;
-				var a = _n2.b;
-				var s1 = _n2.c;
-				var _n3 = parseB(s1);
-				if (_n3.$ === 1) {
-					var p2 = _n3.a;
-					var x = _n3.b;
-					return A2(elm$parser$Parser$Advanced$Bad, p1 || p2, x);
-				} else {
-					var p2 = _n3.a;
-					var b = _n3.b;
-					var s2 = _n3.c;
-					return A3(
-						elm$parser$Parser$Advanced$Good,
-						p1 || p2,
-						A2(func, a, b),
-						s2);
-				}
-			}
-		};
-	});
-var elm$parser$Parser$Advanced$ignorer = F2(
-	function (keepParser, ignoreParser) {
-		return A3(elm$parser$Parser$Advanced$map2, elm$core$Basics$always, keepParser, ignoreParser);
-	});
-var elm$parser$Parser$ignorer = elm$parser$Parser$Advanced$ignorer;
-var elm$parser$Parser$Advanced$Append = F2(
-	function (a, b) {
-		return {$: 2, a: a, b: b};
-	});
-var elm$parser$Parser$Advanced$oneOfHelp = F3(
-	function (s0, bag, parsers) {
-		oneOfHelp:
-		while (true) {
-			if (!parsers.b) {
-				return A2(elm$parser$Parser$Advanced$Bad, false, bag);
-			} else {
-				var parse = parsers.a;
-				var remainingParsers = parsers.b;
-				var _n1 = parse(s0);
-				if (!_n1.$) {
-					var step = _n1;
-					return step;
-				} else {
-					var step = _n1;
-					var p = step.a;
-					var x = step.b;
-					if (p) {
-						return step;
-					} else {
-						var $temp$s0 = s0,
-							$temp$bag = A2(elm$parser$Parser$Advanced$Append, bag, x),
-							$temp$parsers = remainingParsers;
-						s0 = $temp$s0;
-						bag = $temp$bag;
-						parsers = $temp$parsers;
-						continue oneOfHelp;
-					}
-				}
-			}
-		}
-	});
-var elm$parser$Parser$Advanced$oneOf = function (parsers) {
-	return function (s) {
-		return A3(elm$parser$Parser$Advanced$oneOfHelp, s, elm$parser$Parser$Advanced$Empty, parsers);
-	};
-};
-var elm$parser$Parser$oneOf = elm$parser$Parser$Advanced$oneOf;
-var elm$parser$Parser$Advanced$succeed = function (a) {
-	return function (s) {
-		return A3(elm$parser$Parser$Advanced$Good, false, a, s);
-	};
-};
-var elm$parser$Parser$succeed = elm$parser$Parser$Advanced$succeed;
-var elm$parser$Parser$Expecting = function (a) {
-	return {$: 0, a: a};
-};
-var elm$parser$Parser$Advanced$Token = F2(
-	function (a, b) {
-		return {$: 0, a: a, b: b};
-	});
-var elm$parser$Parser$toToken = function (str) {
-	return A2(
-		elm$parser$Parser$Advanced$Token,
-		str,
-		elm$parser$Parser$Expecting(str));
-};
-var elm$core$Basics$not = _Basics_not;
-var elm$parser$Parser$Advanced$isSubString = _Parser_isSubString;
-var elm$parser$Parser$Advanced$token = function (_n0) {
-	var str = _n0.a;
-	var expecting = _n0.b;
-	var progress = !elm$core$String$isEmpty(str);
-	return function (s) {
-		var _n1 = A5(elm$parser$Parser$Advanced$isSubString, str, s.b, s.c8, s.cx, s.a);
-		var newOffset = _n1.a;
-		var newRow = _n1.b;
-		var newCol = _n1.c;
-		return _Utils_eq(newOffset, -1) ? A2(
-			elm$parser$Parser$Advanced$Bad,
-			false,
-			A2(elm$parser$Parser$Advanced$fromState, s, expecting)) : A3(
-			elm$parser$Parser$Advanced$Good,
-			progress,
-			0,
-			{cx: newCol, c: s.c, d: s.d, b: newOffset, c8: newRow, a: s.a});
-	};
-};
-var elm$parser$Parser$token = function (str) {
-	return elm$parser$Parser$Advanced$token(
-		elm$parser$Parser$toToken(str));
-};
-var author$project$BFParser$parseTokenByTable = function (table) {
-	var _n0 = table;
-	var tokenTable = _n0.a;
-	return elm$parser$Parser$oneOf(
-		A2(
-			elm$core$List$map,
-			function (x) {
-				var value = x.b;
-				var kind = x.a;
-				return A2(
-					elm$parser$Parser$ignorer,
-					elm$parser$Parser$succeed(
-						A4(author$project$BFTypes$BFToken, kind, value, elm$core$Maybe$Nothing, 0)),
-					elm$parser$Parser$token(value));
-			},
-			tokenTable));
-};
-var author$project$BFTypes$BFCommand = function (a) {
-	return {$: 0, a: a};
-};
-var author$project$BFTypes$InsufficientLoopEnd = 2;
-var author$project$BFTypes$TooManyLoopEnd = 1;
-var elm$parser$Parser$Done = function (a) {
-	return {$: 1, a: a};
-};
-var elm$parser$Parser$Loop = function (a) {
-	return {$: 0, a: a};
-};
-var elm$parser$Parser$ExpectingEnd = {$: 10};
-var elm$parser$Parser$Advanced$end = function (x) {
-	return function (s) {
-		return _Utils_eq(
-			elm$core$String$length(s.a),
-			s.b) ? A3(elm$parser$Parser$Advanced$Good, false, 0, s) : A2(
-			elm$parser$Parser$Advanced$Bad,
-			false,
-			A2(elm$parser$Parser$Advanced$fromState, s, x));
-	};
-};
-var elm$parser$Parser$end = elm$parser$Parser$Advanced$end(elm$parser$Parser$ExpectingEnd);
-var elm$parser$Parser$Advanced$Done = function (a) {
-	return {$: 1, a: a};
-};
-var elm$parser$Parser$Advanced$Loop = function (a) {
-	return {$: 0, a: a};
-};
-var elm$parser$Parser$toAdvancedStep = function (step) {
-	if (!step.$) {
-		var s = step.a;
-		return elm$parser$Parser$Advanced$Loop(s);
-	} else {
-		var a = step.a;
-		return elm$parser$Parser$Advanced$Done(a);
-	}
-};
-var elm$parser$Parser$Advanced$loopHelp = F4(
-	function (p, state, callback, s0) {
-		loopHelp:
-		while (true) {
-			var _n0 = callback(state);
-			var parse = _n0;
-			var _n1 = parse(s0);
-			if (!_n1.$) {
-				var p1 = _n1.a;
-				var step = _n1.b;
-				var s1 = _n1.c;
-				if (!step.$) {
-					var newState = step.a;
-					var $temp$p = p || p1,
-						$temp$state = newState,
-						$temp$callback = callback,
-						$temp$s0 = s1;
-					p = $temp$p;
-					state = $temp$state;
-					callback = $temp$callback;
-					s0 = $temp$s0;
-					continue loopHelp;
-				} else {
-					var result = step.a;
-					return A3(elm$parser$Parser$Advanced$Good, p || p1, result, s1);
-				}
-			} else {
-				var p1 = _n1.a;
-				var x = _n1.b;
-				return A2(elm$parser$Parser$Advanced$Bad, p || p1, x);
-			}
-		}
-	});
-var elm$parser$Parser$Advanced$loop = F2(
-	function (state, callback) {
-		return function (s) {
-			return A4(elm$parser$Parser$Advanced$loopHelp, false, state, callback, s);
-		};
-	});
-var elm$parser$Parser$loop = F2(
-	function (state, callback) {
-		return A2(
-			elm$parser$Parser$Advanced$loop,
-			state,
-			function (s) {
-				return A2(
-					elm$parser$Parser$map,
-					elm$parser$Parser$toAdvancedStep,
-					callback(s));
-			});
-	});
-var author$project$BFParser$parseTokensHelper = function (cmdTable) {
-	return A2(
-		elm$parser$Parser$loop,
-		A2(
-			author$project$BFParser$BFTokenParseMemo,
-			_List_fromArray(
-				[_List_Nil]),
-			0),
-		function (memo) {
-			return elm$parser$Parser$oneOf(
-				_List_fromArray(
-					[
-						A2(
-						elm$parser$Parser$map,
-						function (token) {
-							var index = memo.X;
-							var _n0 = memo.t;
-							var stackList = _n0;
-							var depth = elm$core$List$length(stackList);
-							var stack = function () {
-								var _n1 = token.dF;
-								switch (_n1) {
-									case 1:
-										return A2(
-											author$project$BFParser$beginNewLoopCommand,
-											memo.t,
-											author$project$BFTypes$BFCommand(
-												_Utils_update(
-													token,
-													{
-														X: elm$core$Maybe$Just(index)
-													})));
-									case 2:
-										return (depth <= 1) ? A2(
-											author$project$BFParser$addCommandIntoCurrentList,
-											memo.t,
-											author$project$BFTypes$BFCommand(
-												_Utils_update(
-													token,
-													{dv: 1}))) : A2(
-											author$project$BFParser$finalizeLoopCommandWithFullStack,
-											memo.t,
-											author$project$BFTypes$BFCommand(
-												_Utils_update(
-													token,
-													{
-														X: elm$core$Maybe$Just(index)
-													})));
-									default:
-										return A2(
-											author$project$BFParser$addCommandIntoCurrentList,
-											memo.t,
-											author$project$BFTypes$BFCommand(
-												_Utils_update(
-													token,
-													{
-														X: elm$core$Maybe$Just(index)
-													})));
-								}
-							}();
-							return elm$parser$Parser$Loop(
-								_Utils_update(
-									memo,
-									{X: index + 1, t: stack}));
-						},
-						author$project$BFParser$parseTokenByTable(cmdTable)),
-						A2(
-						elm$parser$Parser$map,
-						function (token) {
-							var stack = A2(
-								author$project$BFParser$addCommandIntoCurrentList,
-								memo.t,
-								author$project$BFTypes$BFCommand(token));
-							return elm$parser$Parser$Loop(
-								_Utils_update(
-									memo,
-									{t: stack}));
-						},
-						author$project$BFParser$parseNoOpToken),
-						A2(
-						elm$parser$Parser$map,
-						function (_n2) {
-							var finalizer = F2(
-								function (list, current) {
-									var _n4 = current;
-									var commands = _n4;
-									var commandLength = elm$core$List$length(commands);
-									if (!commandLength) {
-										return list;
-									} else {
-										var _n5 = A2(
-											author$project$BFParser$finalizeLoopCommand,
-											_List_fromArray(
-												[current, list]),
-											author$project$BFTypes$BFCommand(
-												A4(author$project$BFTypes$BFToken, 2, '(Loop wasn\'t closed)', elm$core$Maybe$Nothing, 2)));
-										var innerStackList = _n5;
-										return A2(
-											elm$core$Maybe$withDefault,
-											_List_Nil,
-											elm$core$List$head(innerStackList));
-									}
-								});
-							var _n3 = memo.t;
-							var stackList = _n3;
-							var result = A3(elm$core$List$foldl, finalizer, _List_Nil, stackList);
-							return elm$parser$Parser$Done(
-								author$project$BFParser$reverseCommandList(result));
-						},
-						elm$parser$Parser$end)
-					]));
-		});
-};
-var elm$parser$Parser$DeadEnd = F3(
-	function (row, col, problem) {
-		return {cx: col, c0: problem, c8: row};
-	});
-var elm$parser$Parser$problemToDeadEnd = function (p) {
-	return A3(elm$parser$Parser$DeadEnd, p.c8, p.cx, p.c0);
-};
-var elm$parser$Parser$Advanced$bagToList = F2(
-	function (bag, list) {
-		bagToList:
-		while (true) {
-			switch (bag.$) {
-				case 0:
-					return list;
-				case 1:
-					var bag1 = bag.a;
-					var x = bag.b;
-					var $temp$bag = bag1,
-						$temp$list = A2(elm$core$List$cons, x, list);
-					bag = $temp$bag;
-					list = $temp$list;
-					continue bagToList;
-				default:
-					var bag1 = bag.a;
-					var bag2 = bag.b;
-					var $temp$bag = bag1,
-						$temp$list = A2(elm$parser$Parser$Advanced$bagToList, bag2, list);
-					bag = $temp$bag;
-					list = $temp$list;
-					continue bagToList;
-			}
-		}
-	});
-var elm$parser$Parser$Advanced$run = F2(
-	function (_n0, src) {
-		var parse = _n0;
-		var _n1 = parse(
-			{cx: 1, c: _List_Nil, d: 1, b: 0, c8: 1, a: src});
-		if (!_n1.$) {
-			var value = _n1.b;
-			return elm$core$Result$Ok(value);
-		} else {
-			var bag = _n1.b;
-			return elm$core$Result$Err(
-				A2(elm$parser$Parser$Advanced$bagToList, bag, _List_Nil));
-		}
-	});
-var elm$parser$Parser$run = F2(
-	function (parser, source) {
-		var _n0 = A2(elm$parser$Parser$Advanced$run, parser, source);
-		if (!_n0.$) {
-			var a = _n0.a;
-			return elm$core$Result$Ok(a);
-		} else {
-			var problems = _n0.a;
-			return elm$core$Result$Err(
-				A2(elm$core$List$map, elm$parser$Parser$problemToDeadEnd, problems));
-		}
-	});
-var author$project$BFParser$parseTokens = function (table) {
-	return elm$parser$Parser$run(
-		author$project$BFParser$parseTokensHelper(table));
-};
-var author$project$BFRunner$decreaseTapePointer = function (current) {
-	return (0 < current) ? elm$core$Result$Ok(current - 1) : elm$core$Result$Err('Tape Pointer Under Limit Exceed');
-};
-var elm$core$Bitwise$shiftRightZfBy = _Bitwise_shiftRightZfBy;
-var elm$core$Array$bitMask = 4294967295 >>> (32 - elm$core$Array$shiftStep);
-var elm$core$Bitwise$and = _Bitwise_and;
-var elm$core$Elm$JsArray$unsafeGet = _JsArray_unsafeGet;
-var elm$core$Array$getHelp = F3(
-	function (shift, index, tree) {
-		getHelp:
-		while (true) {
-			var pos = elm$core$Array$bitMask & (index >>> shift);
-			var _n0 = A2(elm$core$Elm$JsArray$unsafeGet, pos, tree);
-			if (!_n0.$) {
-				var subTree = _n0.a;
-				var $temp$shift = shift - elm$core$Array$shiftStep,
-					$temp$index = index,
-					$temp$tree = subTree;
-				shift = $temp$shift;
-				index = $temp$index;
-				tree = $temp$tree;
-				continue getHelp;
-			} else {
-				var values = _n0.a;
-				return A2(elm$core$Elm$JsArray$unsafeGet, elm$core$Array$bitMask & index, values);
-			}
-		}
-	});
-var elm$core$Bitwise$shiftLeftBy = _Bitwise_shiftLeftBy;
-var elm$core$Array$tailIndex = function (len) {
-	return (len >>> 5) << 5;
-};
-var elm$core$Basics$ge = _Utils_ge;
-var elm$core$Array$get = F2(
-	function (index, _n0) {
-		var len = _n0.a;
-		var startShift = _n0.b;
-		var tree = _n0.c;
-		var tail = _n0.d;
-		return ((index < 0) || (_Utils_cmp(index, len) > -1)) ? elm$core$Maybe$Nothing : ((_Utils_cmp(
-			index,
-			elm$core$Array$tailIndex(len)) > -1) ? elm$core$Maybe$Just(
-			A2(elm$core$Elm$JsArray$unsafeGet, elm$core$Array$bitMask & index, tail)) : elm$core$Maybe$Just(
-			A3(elm$core$Array$getHelp, startShift, index, tree)));
-	});
-var elm$core$Elm$JsArray$unsafeSet = _JsArray_unsafeSet;
-var elm$core$Array$setHelp = F4(
-	function (shift, index, value, tree) {
-		var pos = elm$core$Array$bitMask & (index >>> shift);
-		var _n0 = A2(elm$core$Elm$JsArray$unsafeGet, pos, tree);
-		if (!_n0.$) {
-			var subTree = _n0.a;
-			var newSub = A4(elm$core$Array$setHelp, shift - elm$core$Array$shiftStep, index, value, subTree);
-			return A3(
-				elm$core$Elm$JsArray$unsafeSet,
-				pos,
-				elm$core$Array$SubTree(newSub),
-				tree);
-		} else {
-			var values = _n0.a;
-			var newLeaf = A3(elm$core$Elm$JsArray$unsafeSet, elm$core$Array$bitMask & index, value, values);
-			return A3(
-				elm$core$Elm$JsArray$unsafeSet,
-				pos,
-				elm$core$Array$Leaf(newLeaf),
-				tree);
-		}
-	});
-var elm$core$Array$set = F3(
-	function (index, value, array) {
-		var len = array.a;
-		var startShift = array.b;
-		var tree = array.c;
-		var tail = array.d;
-		return ((index < 0) || (_Utils_cmp(index, len) > -1)) ? array : ((_Utils_cmp(
-			index,
-			elm$core$Array$tailIndex(len)) > -1) ? A4(
-			elm$core$Array$Array_elm_builtin,
-			len,
-			startShift,
-			tree,
-			A3(elm$core$Elm$JsArray$unsafeSet, elm$core$Array$bitMask & index, value, tail)) : A4(
-			elm$core$Array$Array_elm_builtin,
-			len,
-			startShift,
-			A4(elm$core$Array$setHelp, startShift, index, value, tree),
-			tail));
-	});
-var author$project$BFRunner$decreaseTapeValue = F2(
-	function (tape, pos) {
-		var _n0 = tape;
-		var tapeArray = _n0;
-		var value = A2(
-			elm$core$Maybe$withDefault,
-			0,
-			A2(elm$core$Array$get, pos, tapeArray));
-		return (value < 1) ? A3(elm$core$Array$set, pos, 255, tapeArray) : A3(elm$core$Array$set, pos, value - 1, tapeArray);
-	});
-var author$project$BFRunner$getBFCommandByRevIndices = F2(
-	function (cmds, pos) {
-		getBFCommandByRevIndices:
-		while (true) {
-			if (pos.b) {
-				var currentPos = pos.a;
-				var remainingPos = pos.b;
-				var _n1 = A2(elm$core$Array$get, currentPos, cmds);
-				if (!_n1.$) {
-					if (_n1.a.$ === 1) {
-						var newCmds = _n1.a.a;
-						var $temp$cmds = newCmds,
-							$temp$pos = remainingPos;
-						cmds = $temp$cmds;
-						pos = $temp$pos;
-						continue getBFCommandByRevIndices;
-					} else {
-						var cmd = _n1.a;
-						return elm$core$Maybe$Just(cmd);
-					}
-				} else {
-					return elm$core$Maybe$Nothing;
-				}
-			} else {
-				return elm$core$Maybe$Just(
-					author$project$BFTypes$BFLoopFunc(cmds));
-			}
-		}
-	});
-var author$project$BFRunner$getBFCommandByIndices = F2(
-	function (cmds, pos) {
-		return A2(
-			author$project$BFRunner$getBFCommandByRevIndices,
-			cmds,
-			elm$core$List$reverse(pos));
-	});
-var author$project$BFRunner$increaseBFCommandIndices = function (pos) {
-	if (pos.b) {
-		var head = pos.a;
-		var tail = pos.b;
-		return A2(elm$core$List$cons, head + 1, tail);
-	} else {
-		return _List_fromArray(
-			[0]);
-	}
-};
-var author$project$BFRunner$getNextIndices = F2(
-	function (cmds, pos) {
-		return A2(
-			author$project$BFRunner$skipUntilNextBFCommand,
-			cmds,
-			author$project$BFRunner$increaseBFCommandIndices(pos));
-	});
-var author$project$BFRunner$skipUntilNextBFCommand = F2(
-	function (cmds, pos) {
-		var cmd = A2(author$project$BFRunner$getBFCommandByIndices, cmds, pos);
-		if (cmd.$ === 1) {
-			var _n1 = elm$core$List$tail(pos);
-			if ((!_n1.$) && _n1.a.b) {
-				var parentPos = _n1.a;
-				return A2(author$project$BFRunner$getNextIndices, cmds, parentPos);
-			} else {
-				return pos;
-			}
-		} else {
-			if (!cmd.a.$) {
-				var token = cmd.a.a;
-				var _n2 = token.dF;
-				if (!_n2) {
-					return A2(author$project$BFRunner$getNextIndices, cmds, pos);
-				} else {
-					return pos;
-				}
-			} else {
-				return A2(
-					author$project$BFRunner$skipUntilNextBFCommand,
-					cmds,
-					A2(elm$core$List$cons, 0, pos));
-			}
-		}
-	});
-var author$project$BFRunner$getTapeValue = F2(
-	function (tape, pos) {
-		var _n0 = tape;
-		var tapeArray = _n0;
-		var value = A2(
-			elm$core$Maybe$withDefault,
-			0,
-			A2(elm$core$Array$get, pos, tapeArray));
-		return value;
-	});
-var author$project$BFRunner$increaseTapePointer = function (current) {
-	return (_Utils_cmp(current + 1, author$project$BFRunner$tapeSize) < 0) ? elm$core$Result$Ok(current + 1) : elm$core$Result$Err('Tape Pointer Limit Exceed');
-};
-var author$project$BFRunner$increaseTapeValue = F2(
-	function (tape, pos) {
-		var _n0 = tape;
-		var tapeArray = _n0;
-		var value = A2(
-			elm$core$Maybe$withDefault,
-			0,
-			A2(elm$core$Array$get, pos, tapeArray));
-		return (255 < (value + 1)) ? A3(elm$core$Array$set, pos, 0, tapeArray) : A3(elm$core$Array$set, pos, value + 1, tapeArray);
-	});
-var elm$core$Basics$modBy = _Basics_modBy;
-var author$project$BFRunner$setTapeValue = F3(
-	function (tape, pos, value) {
-		var modValue = A2(elm$core$Basics$modBy, 256, value);
-		var _n0 = tape;
-		var tapeArray = _n0;
-		var newTape = A3(elm$core$Array$set, pos, modValue, tapeArray);
-		return newTape;
-	});
-var elm$core$Char$fromCode = _Char_fromCode;
-var elm$core$String$append = _String_append;
-var elm$core$String$cons = _String_cons;
-var elm$core$String$fromChar = function (_char) {
-	return A2(elm$core$String$cons, _char, '');
-};
-var author$project$BFRunner$bfStepRun = function (state) {
-	bfStepRun:
-	while (true) {
-		var inputStr = state.cN;
-		var cmds = state.cz;
-		var indices = A2(author$project$BFRunner$getNextIndices, cmds, state.i);
-		var cmd = A2(author$project$BFRunner$getBFCommandByIndices, cmds, indices);
-		if (!cmd.$) {
-			if (!cmd.a.$) {
-				var token = cmd.a.a;
-				var _n1 = token.dF;
-				switch (_n1) {
-					case 0:
-						var nextState = _Utils_update(
-							state,
-							{i: indices});
-						var $temp$state = nextState;
-						state = $temp$state;
-						continue bfStepRun;
-					case 1:
-						var _n2 = A2(author$project$BFRunner$getTapeValue, state.x, state.v);
-						if (!_n2) {
-							var nextIndices = A2(
-								elm$core$Maybe$withDefault,
-								_List_Nil,
-								elm$core$List$tail(indices));
-							var nextState = _Utils_update(
-								state,
-								{i: nextIndices});
-							var $temp$state = nextState;
-							state = $temp$state;
-							continue bfStepRun;
-						} else {
-							var $temp$state = _Utils_update(
-								state,
-								{i: indices});
-							state = $temp$state;
-							continue bfStepRun;
-						}
-					case 2:
-						var loopStartIndices = A2(
-							elm$core$List$cons,
-							-1,
-							A2(
-								elm$core$Maybe$withDefault,
-								_List_Nil,
-								elm$core$List$tail(indices)));
-						var nextState = _Utils_update(
-							state,
-							{i: loopStartIndices});
-						var $temp$state = nextState;
-						state = $temp$state;
-						continue bfStepRun;
-					case 5:
-						var _n3 = author$project$BFRunner$increaseTapePointer(state.v);
-						if (!_n3.$) {
-							var ptr = _n3.a;
-							return _Utils_update(
-								state,
-								{i: indices, u: token.X, v: ptr});
-						} else {
-							var error = _n3.a;
-							return _Utils_update(
-								state,
-								{
-									i: indices,
-									dv: elm$core$Maybe$Just(error),
-									u: token.X
-								});
-						}
-					case 6:
-						var _n4 = author$project$BFRunner$decreaseTapePointer(state.v);
-						if (!_n4.$) {
-							var ptr = _n4.a;
-							return _Utils_update(
-								state,
-								{i: indices, u: token.X, v: ptr});
-						} else {
-							var error = _n4.a;
-							return _Utils_update(
-								state,
-								{
-									i: indices,
-									dv: elm$core$Maybe$Just(error),
-									u: token.X
-								});
-						}
-					case 3:
-						return _Utils_update(
-							state,
-							{
-								i: indices,
-								u: token.X,
-								x: A2(author$project$BFRunner$increaseTapeValue, state.x, state.v)
-							});
-					case 4:
-						return _Utils_update(
-							state,
-							{
-								i: indices,
-								u: token.X,
-								x: A2(author$project$BFRunner$decreaseTapeValue, state.x, state.v)
-							});
-					case 7:
-						var maybeInput = elm$core$String$uncons(
-							A2(elm$core$String$dropLeft, state.Y, inputStr));
-						if (!maybeInput.$) {
-							var _n6 = maybeInput.a;
-							var input = _n6.a;
-							return _Utils_update(
-								state,
-								{
-									i: indices,
-									Y: state.Y + 1,
-									u: token.X,
-									x: A3(
-										author$project$BFRunner$setTapeValue,
-										state.x,
-										state.v,
-										elm$core$Char$toCode(input))
-								});
-						} else {
-							return _Utils_update(
-								state,
-								{i: indices, Y: state.Y + 1, u: token.X});
-						}
-					default:
-						var outputChar = elm$core$String$fromChar(
-							elm$core$Char$fromCode(
-								A2(author$project$BFRunner$getTapeValue, state.x, state.v)));
-						var output = A2(elm$core$String$append, state.cd, outputChar);
-						return _Utils_update(
-							state,
-							{i: indices, cd: output, u: token.X});
-				}
-			} else {
-				var nextState = _Utils_update(
-					state,
-					{i: indices});
-				var $temp$state = nextState;
-				state = $temp$state;
-				continue bfStepRun;
-			}
-		} else {
-			return _Utils_update(
-				state,
-				{
-					dv: elm$core$Maybe$Just('[End]')
-				});
-		}
-	}
-};
-var author$project$BFRunner$bfRun = function (state) {
-	bfRun:
-	while (true) {
-		var newState = author$project$BFRunner$bfStepRun(state);
-		var _n0 = newState.dv;
-		if (_n0.$ === 1) {
-			var $temp$state = newState;
-			state = $temp$state;
-			continue bfRun;
-		} else {
-			return newState;
-		}
-	}
-};
-var author$project$Cacher$cache = _Platform_outgoingPort('cache', elm$core$Basics$identity);
-var elm$json$Json$Encode$object = function (pairs) {
-	return _Json_wrap(
-		A3(
-			elm$core$List$foldl,
-			F2(
-				function (_n0, obj) {
-					var k = _n0.a;
-					var v = _n0.b;
-					return A3(_Json_addField, k, v, obj);
-				}),
-			_Json_emptyObject(0),
-			pairs));
-};
-var elm$json$Json$Encode$string = _Json_wrap;
-var author$project$Main$encodeModel = function (model) {
-	return elm$json$Json$Encode$object(
-		_List_fromArray(
-			[
-				_Utils_Tuple2(
-				'programContent',
-				elm$json$Json$Encode$string(model.ae))
-			]));
-};
-var author$project$Main$withCacheCmd = function (model) {
-	return _Utils_Tuple2(
-		model,
-		elm$core$Platform$Cmd$batch(
-			_List_fromArray(
-				[
-					author$project$Cacher$cache(
-					author$project$Main$encodeModel(model))
-				])));
-};
-var author$project$Main$update = F2(
-	function (msg, model) {
-		switch (msg.$) {
-			case 0:
-				var programContent = msg.a;
-				var state = model.e;
-				var commands = A2(
-					elm$core$Result$withDefault,
-					model.e.cz,
-					A2(author$project$BFParser$parseTokens, model.s, programContent));
-				return author$project$Main$withCacheCmd(
-					_Utils_update(
-						model,
-						{
-							ae: programContent,
-							e: _Utils_update(
-								state,
-								{cz: commands})
-						}));
-			case 1:
-				var input = msg.a;
-				var state = model.e;
-				return author$project$Main$withCmdNone(
-					_Utils_update(
-						model,
-						{
-							e: _Utils_update(
-								state,
-								{cN: input})
-						}));
-			case 2:
-				var table = msg.a;
-				return author$project$Main$withCmdNone(
-					_Utils_update(
-						model,
-						{s: table}));
-			case 3:
-				var state = msg.a;
-				var dropdownStates = model.T;
-				var newDropdownStates = _Utils_update(
-					dropdownStates,
-					{s: state});
-				return author$project$Main$withCmdNone(
-					_Utils_update(
-						model,
-						{T: newDropdownStates}));
-			case 4:
-				return author$project$Main$withCmdNone(author$project$Main$initialModel);
-			case 5:
-				return author$project$Main$withCmdNone(
-					_Utils_update(
-						model,
-						{
-							e: _Utils_update(
-								author$project$BFRunner$initialRunningState,
-								{cz: model.e.cz, cN: model.e.cN})
-						}));
-			case 6:
-				var state = author$project$BFRunner$bfRun(
-					_Utils_update(
-						author$project$BFRunner$initialRunningState,
-						{cz: model.e.cz, cN: model.e.cN}));
-				return author$project$Main$withCmdNone(
-					_Utils_update(
-						model,
-						{e: state}));
-			default:
-				var state = author$project$BFRunner$bfStepRun(model.e);
-				return author$project$Main$withCmdNone(
-					_Utils_update(
-						model,
-						{e: state}));
-		}
-	});
-var author$project$Main$ResetAll = {$: 4};
-var author$project$Main$ResetRunnningState = {$: 5};
-var author$project$Main$Run = {$: 6};
-var author$project$Main$StepRun = {$: 7};
+var author$project$Main$ResetAll = {$: 5};
+var author$project$Main$ResetRunnningState = {$: 6};
+var author$project$Main$Run = {$: 7};
+var author$project$Main$StepRun = {$: 8};
 var author$project$Main$UpdateInput = function (a) {
-	return {$: 1, a: a};
+	return {$: 2, a: a};
 };
 var author$project$Main$UpdateProgramContent = function (a) {
 	return {$: 0, a: a};
@@ -7265,7 +7279,7 @@ var author$project$Main$viewOfBFCommand = F3(
 								elm$html$Html$text(token.dT)
 							])));
 			} else {
-				var isCurrentCommand = (!_Utils_eq(stepIndex, elm$core$Maybe$Nothing)) && _Utils_eq(token.X, stepIndex);
+				var isCurrentCommand = (!_Utils_eq(stepIndex, elm$core$Maybe$Nothing)) && _Utils_eq(token.Y, stepIndex);
 				return elm$core$List$singleton(
 					A2(
 						elm$html$Html$span,
@@ -7299,7 +7313,7 @@ var author$project$Main$viewOfBFCommand = F3(
 		}
 	});
 var author$project$Main$UpdateParserTokenTable = function (a) {
-	return {$: 2, a: a};
+	return {$: 3, a: a};
 };
 var elm$virtual_dom$VirtualDom$Normal = function (a) {
 	return {$: 0, a: a};
@@ -8014,7 +8028,7 @@ var rundis$elm_bootstrap$Bootstrap$Dropdown$menuStyles = F2(
 								A2(
 								elm$html$Html$Attributes$style,
 								'transform',
-								A3(translate, -toggleSize.ai, toggleSize.W, 0))
+								A3(translate, -toggleSize.ai, toggleSize.X, 0))
 							]));
 				}
 			}
@@ -8026,7 +8040,7 @@ var rundis$elm_bootstrap$Bootstrap$Dropdown$menuStyles = F2(
 					A2(
 					elm$html$Html$Attributes$style,
 					'transform',
-					A3(translate, -toggleSize.ai, -menuSize.W, 0))
+					A3(translate, -toggleSize.ai, -menuSize.X, 0))
 				]));
 	});
 var rundis$elm_bootstrap$Bootstrap$Dropdown$dropdownMenu = F3(
@@ -8242,7 +8256,7 @@ var rundis$elm_bootstrap$Bootstrap$Utilities$DomHelper$boundingArea = A4(
 		function (_n0, width, height) {
 			var x = _n0.a;
 			var y = _n0.b;
-			return {W: height, K: x, N: y, ai: width};
+			return {X: height, K: x, O: y, ai: width};
 		}),
 	A2(rundis$elm_bootstrap$Bootstrap$Utilities$DomHelper$position, 0, 0),
 	rundis$elm_bootstrap$Bootstrap$Utilities$DomHelper$offsetWidth,
@@ -8898,7 +8912,7 @@ var rundis$elm_bootstrap$Bootstrap$Grid$Internal$orderToAttributes = function (o
 	var order_ = function (m) {
 		if (!m.$) {
 			var screenSize = m.a.db;
-			var moveCount = m.a.ac;
+			var moveCount = m.a.ad;
 			return elm$core$Maybe$Just(
 				elm$html$Html$Attributes$class(
 					'order' + (rundis$elm_bootstrap$Bootstrap$Grid$Internal$screenSizeToPartialString(screenSize) + rundis$elm_bootstrap$Bootstrap$Grid$Internal$orderColOption(moveCount))));
@@ -8945,7 +8959,7 @@ var rundis$elm_bootstrap$Bootstrap$Grid$Internal$pullsToAttributes = function (p
 	var pull_ = function (m) {
 		if (!m.$) {
 			var screenSize = m.a.db;
-			var moveCount = m.a.ac;
+			var moveCount = m.a.ad;
 			return elm$core$Maybe$Just(
 				elm$html$Html$Attributes$class(
 					'pull' + (rundis$elm_bootstrap$Bootstrap$Grid$Internal$screenSizeToPartialString(screenSize) + rundis$elm_bootstrap$Bootstrap$Grid$Internal$moveCountOption(moveCount))));
@@ -8962,7 +8976,7 @@ var rundis$elm_bootstrap$Bootstrap$Grid$Internal$pushesToAttributes = function (
 	var push_ = function (m) {
 		if (!m.$) {
 			var screenSize = m.a.db;
-			var moveCount = m.a.ac;
+			var moveCount = m.a.ad;
 			return elm$core$Maybe$Just(
 				elm$html$Html$Attributes$class(
 					'push' + (rundis$elm_bootstrap$Bootstrap$Grid$Internal$screenSizeToPartialString(screenSize) + rundis$elm_bootstrap$Bootstrap$Grid$Internal$moveCountOption(moveCount))));
@@ -9318,7 +9332,7 @@ var author$project$Main$view = function (model) {
 													[
 														rundis$elm_bootstrap$Bootstrap$Form$Textarea$rows(15),
 														rundis$elm_bootstrap$Bootstrap$Form$Textarea$onInput(author$project$Main$UpdateProgramContent),
-														rundis$elm_bootstrap$Bootstrap$Form$Textarea$value(model.ae)
+														rundis$elm_bootstrap$Bootstrap$Form$Textarea$value(model.N)
 													])))
 										]),
 									A3(
@@ -9328,7 +9342,7 @@ var author$project$Main$view = function (model) {
 											[
 												A2(
 												rundis$elm_bootstrap$Bootstrap$Dropdown$dropdown,
-												model.T.s,
+												model.U.s,
 												{
 													dE: A2(elm$core$List$map, author$project$Main$viewOfBFTokenTableItem, author$project$Main$bfTokenTableList),
 													dL: _List_Nil,

@@ -78,6 +78,8 @@ type alias DropdownStates =
 init : Json.Decode.Value -> ( Model, Cmd Msg )
 init flags =
     decodeModel flags
+        |> update ParseTokens
+        |> Tuple.first
         |> withCmdNone
 
 
@@ -136,6 +138,7 @@ withCacheCmd model =
 
 type Msg
     = UpdateProgramContent String
+    | ParseTokens
     | UpdateInput String
     | UpdateParserTokenTable BFTokenTable
     | UpdateParserTokenTableDropDownState Dropdown.State
@@ -149,16 +152,22 @@ update : Msg -> Model -> ( Model, Cmd msg )
 update msg model =
     case msg of
         UpdateProgramContent programContent ->
+            { model | programContent = programContent }
+                |> update ParseTokens
+                |> Tuple.first
+                |> withCacheCmd
+
+        ParseTokens ->
             let
                 commands =
-                    parseTokens model.parserTokenTable programContent
+                    parseTokens model.parserTokenTable model.programContent
                         |> Result.withDefault model.state.commands
 
                 state =
                     model.state
             in
-            { model | programContent = programContent, state = { state | commands = commands } }
-                |> withCacheCmd
+            { model | state = { state | commands = commands } }
+                |> withCmdNone
 
         UpdateInput input ->
             let
@@ -170,6 +179,8 @@ update msg model =
 
         UpdateParserTokenTable table ->
             { model | parserTokenTable = table }
+                |> update ParseTokens
+                |> Tuple.first
                 |> withCmdNone
 
         UpdateParserTokenTableDropDownState state ->
