@@ -9,8 +9,8 @@ table =
       , ( DecreasePointer, "Ook? Ook." )
       , ( IncreaseValue, "Ook. Ook." )
       , ( DecreaseValue, "Ook! Ook!" )
-      , ( FetchInput, "Ook. Ook!" )
-      , ( PrintCharacter, "Ook! Ook." )
+      , ( ReadInput, "Ook. Ook!" )
+      , ( PrintOutput, "Ook! Ook." )
       , ( LoopStart, "Ook! Ook?" )
       , ( LoopEnd, "Ook? Ook!" )
       ]

@@ -11,8 +11,8 @@ table =
       , ( DecreaseValue, "-" )
       , ( IncreasePointer, ">" )
       , ( DecreasePointer, "<" )
-      , ( FetchInput, "," )
-      , ( PrintCharacter, "." )
+      , ( ReadInput, "," )
+      , ( PrintOutput, "." )
       ]
     , "BF"
     )

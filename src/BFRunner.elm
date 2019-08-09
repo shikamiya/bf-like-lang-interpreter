@@ -212,7 +212,7 @@ bfStepRun state =
                         , tape = decreaseTapeValue state.tape state.tapePointer
                     }
 
-                FetchInput ->
+                ReadInput ->
                     let
                         maybeInput =
                             String.dropLeft state.inputPointer inputStr
@@ -232,7 +232,7 @@ bfStepRun state =
                                 , inputPointer = state.inputPointer + 1
                             }
 
-                PrintCharacter ->
+                PrintOutput ->
                     let
                         outputChar =
                             getTapeValue state.tape state.tapePointer

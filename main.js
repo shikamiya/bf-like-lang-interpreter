@@ -4794,12 +4794,12 @@ var author$project$BFRunner$initialRunningState = {
 };
 var author$project$BFTypes$DecreasePointer = 6;
 var author$project$BFTypes$DecreaseValue = 4;
-var author$project$BFTypes$FetchInput = 7;
 var author$project$BFTypes$IncreasePointer = 5;
 var author$project$BFTypes$IncreaseValue = 3;
 var author$project$BFTypes$LoopEnd = 2;
 var author$project$BFTypes$LoopStart = 1;
-var author$project$BFTypes$PrintCharacter = 8;
+var author$project$BFTypes$PrintOutput = 8;
+var author$project$BFTypes$ReadInput = 7;
 var author$project$Language$BF$table = _Utils_Tuple2(
 	_List_fromArray(
 		[

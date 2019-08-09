@@ -11,8 +11,8 @@ table =
       , ( DecreaseValue, "ﾎｷﾞｨ！ﾎｷﾞｨ！" )
       , ( IncreasePointer, "ﾎｷﾞｨ…ﾎｷﾞｨ〜" )
       , ( DecreasePointer, "ﾎｷﾞｨ〜ﾎｷﾞｨ…" )
-      , ( FetchInput, "ﾎｷﾞｨ…ﾎｷﾞｨ！" )
-      , ( PrintCharacter, "ﾎｷﾞｨ！ﾎｷﾞｨ…" )
+      , ( ReadInput, "ﾎｷﾞｨ…ﾎｷﾞｨ！" )
+      , ( PrintOutput, "ﾎｷﾞｨ！ﾎｷﾞｨ…" )
       ]
     , "Hogy Lang"
     )

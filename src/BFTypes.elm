@@ -11,8 +11,8 @@ type BFTokenKind
     | DecreaseValue
     | IncreasePointer
     | DecreasePointer
-    | FetchInput
-    | PrintCharacter
+    | ReadInput
+    | PrintOutput
 
 
 type alias BFToken =
