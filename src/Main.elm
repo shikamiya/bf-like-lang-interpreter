@@ -1,6 +1,6 @@
 module Main exposing (main)
 
-import Array
+import Array exposing (Array)
 import BFParser exposing (parseTokens)
 import BFRunner exposing (bfRun, bfStepRun, initialRunningState)
 import BFTypes exposing (BFCommand(..), BFParseError(..), BFRunningState, BFTape(..), BFTokenKind(..), BFTokenTable)
@@ -366,9 +366,7 @@ view model =
                             ]
                         ]
                     |> Card.block []
-                        [ Array.map (viewOfBFCommand model 0) model.state.commands
-                            |> Array.toList
-                            |> List.concat
+                        [ viewOfBFCommands model [] model.state.commands
                             |> Html.p []
                             |> Block.custom
                         ]
@@ -418,27 +416,27 @@ viewOfBFTokenTableItem msg table =
     Dropdown.buttonItem [ Html.Events.onClick <| msg table ] [ text <| Tuple.second table ]
 
 
-viewOfBFCommand : Model -> Int -> BFCommand -> List (Html Msg)
-viewOfBFCommand model depth cmd =
+viewOfBFCommands : Model -> List Int -> Array BFCommand -> List (Html Msg)
+viewOfBFCommands model pos cmds =
+    Array.indexedMap (\idx -> viewOfBFCommand model (idx :: pos)) cmds
+        |> Array.toList
+        |> List.concat
+
+
+viewOfBFCommand : Model -> List Int -> BFCommand -> List (Html Msg)
+viewOfBFCommand model pos cmd =
     let
-        stepIndex =
-            model.state.stepIndex
+        isCurrentCommand =
+            model.state.currentIndices == pos
 
-        newDepth =
-            depth + 1
-
-        br =
-            Html.br [] []
-                |> List.singleton
+        depth =
+            List.length pos - 1
 
         spacing =
             Html.span [ Html.Attributes.class "ml-2" ] []
 
-        nextSpacings =
-            List.repeat newDepth spacing
-
-        currentSpacings =
-            List.repeat depth spacing
+        brWithSpacings indent =
+            Html.br [] [] :: List.repeat indent spacing
     in
     case cmd of
         BFCommand token ->
@@ -454,7 +452,7 @@ viewOfBFCommand model depth cmd =
             case token.kind of
                 NoOp ->
                     if token.value == "\n" then
-                        Html.br [] [] :: currentSpacings
+                        brWithSpacings depth
 
                     else
                         let
@@ -474,9 +472,6 @@ viewOfBFCommand model depth cmd =
 
                 _ ->
                     let
-                        isCurrentCommand =
-                            stepIndex /= Nothing && token.index == stepIndex
-
                         displayValue =
                             List.filter (\table -> token.kind == Tuple.first table) (Tuple.first model.tokenTableStates.display.tokenTable)
                                 |> List.head
@@ -497,8 +492,6 @@ viewOfBFCommand model depth cmd =
         BFLoopFunc commands ->
             let
                 children =
-                    Array.map (viewOfBFCommand model newDepth) commands
-                        |> Array.toList
-                        |> List.concat
+                    viewOfBFCommands model pos commands
             in
-            List.concat [ br, nextSpacings, children, br, currentSpacings ]
+            List.concat [ brWithSpacings <| depth + 1, children, brWithSpacings depth ]

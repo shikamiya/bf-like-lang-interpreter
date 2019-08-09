@@ -18,7 +18,6 @@ type BFTokenKind
 type alias BFToken =
     { kind : BFTokenKind
     , value : String
-    , index : Maybe Int
     , error : Maybe BFParseError
     }
 
@@ -40,7 +39,6 @@ type BFParseError
 type alias BFRunningState =
     { commands : Array BFCommand
     , currentIndices : List Int
-    , stepIndex : Maybe Int
     , tape : BFTape
     , tapePointer : Int
     , input : String

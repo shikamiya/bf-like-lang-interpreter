@@ -8,7 +8,6 @@ initialRunningState : BFRunningState
 initialRunningState =
     { commands = Array.fromList []
     , currentIndices = []
-    , stepIndex = Nothing
     , tape = initialBFTape
     , tapePointer = 0
     , input = ""
@@ -188,30 +187,28 @@ bfStepRun state =
                 IncreasePointer ->
                     case increaseTapePointer state.tapePointer of
                         Ok ptr ->
-                            { state | currentIndices = indices, stepIndex = token.index, tapePointer = ptr }
+                            { state | currentIndices = indices, tapePointer = ptr }
 
                         Err error ->
-                            { state | currentIndices = indices, stepIndex = token.index, error = Just error }
+                            { state | currentIndices = indices, error = Just error }
 
                 DecreasePointer ->
                     case decreaseTapePointer state.tapePointer of
                         Ok ptr ->
-                            { state | currentIndices = indices, stepIndex = token.index, tapePointer = ptr }
+                            { state | currentIndices = indices, tapePointer = ptr }
 
                         Err error ->
-                            { state | currentIndices = indices, stepIndex = token.index, error = Just error }
+                            { state | currentIndices = indices, error = Just error }
 
                 IncreaseValue ->
                     { state
                         | currentIndices = indices
-                        , stepIndex = token.index
                         , tape = increaseTapeValue state.tape state.tapePointer
                     }
 
                 DecreaseValue ->
                     { state
                         | currentIndices = indices
-                        , stepIndex = token.index
                         , tape = decreaseTapeValue state.tape state.tapePointer
                     }
 
@@ -225,7 +222,6 @@ bfStepRun state =
                         Just ( input, _ ) ->
                             { state
                                 | currentIndices = indices
-                                , stepIndex = token.index
                                 , tape = setTapeValue state.tape state.tapePointer (Char.toCode input)
                                 , inputPointer = state.inputPointer + 1
                             }
@@ -233,7 +229,6 @@ bfStepRun state =
                         Nothing ->
                             { state
                                 | currentIndices = indices
-                                , stepIndex = token.index
                                 , inputPointer = state.inputPointer + 1
                             }
 
@@ -249,7 +244,6 @@ bfStepRun state =
                     in
                     { state
                         | currentIndices = indices
-                        , stepIndex = token.index
                         , output = output
                     }
 
