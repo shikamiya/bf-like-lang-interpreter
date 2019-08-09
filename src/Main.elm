@@ -400,7 +400,11 @@ view model =
                     |> Card.header [] [ text "Output" ]
                     |> Card.block []
                         [ Html.p []
-                            [ text model.state.output
+                            [ model.state.output
+                                |> List.reverse
+                                |> List.map String.fromChar
+                                |> String.concat
+                                |> text
                             , Html.span [ Html.Attributes.class "text-danger" ] [ text <| Maybe.withDefault "" model.state.error ]
                             ]
                             |> Block.custom

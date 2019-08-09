@@ -12,7 +12,7 @@ initialRunningState =
     , tapePointer = 0
     , input = ""
     , inputPointer = 0
-    , output = ""
+    , output = []
     , error = Nothing
     }
 
@@ -206,10 +206,9 @@ runBFCommandByStep state =
                         outputChar =
                             getTapeValue state.tape state.tapePointer
                                 |> Char.fromCode
-                                >> String.fromChar
 
                         output =
-                            String.append state.output outputChar
+                            outputChar :: state.output
                     in
                     { state
                         | currentIndices = indices

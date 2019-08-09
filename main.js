@@ -4788,7 +4788,7 @@ var author$project$BFRunner$initialRunningState = {
 	dA: elm$core$Maybe$Nothing,
 	cN: '',
 	_: 0,
-	cf: '',
+	cf: _List_Nil,
 	x: author$project$BFRunner$initialBFTape,
 	v: 0
 };
@@ -5947,11 +5947,6 @@ var author$project$BFRunner$increaseTapeValue = F2(
 			pos,
 			A2(author$project$BFRunner$getTapeValue, tape, pos) + 1);
 	});
-var elm$core$Basics$composeR = F3(
-	function (f, g, x) {
-		return g(
-			f(x));
-	});
 var elm$core$Char$fromCode = _Char_fromCode;
 var elm$core$List$tail = function (list) {
 	if (list.b) {
@@ -5962,7 +5957,6 @@ var elm$core$List$tail = function (list) {
 		return elm$core$Maybe$Nothing;
 	}
 };
-var elm$core$String$append = _String_append;
 var elm$core$String$dropLeft = F2(
 	function (n, string) {
 		return (n < 1) ? string : A3(
@@ -5971,10 +5965,6 @@ var elm$core$String$dropLeft = F2(
 			elm$core$String$length(string),
 			string);
 	});
-var elm$core$String$cons = _String_cons;
-var elm$core$String$fromChar = function (_char) {
-	return A2(elm$core$String$cons, _char, '');
-};
 var author$project$BFRunner$runBFCommandByStep = function (state) {
 	runBFCommandByStep:
 	while (true) {
@@ -6095,12 +6085,9 @@ var author$project$BFRunner$runBFCommandByStep = function (state) {
 								{j: indices, _: state._ + 1});
 						}
 					default:
-						var outputChar = A3(
-							elm$core$Basics$composeR,
-							elm$core$Char$fromCode,
-							elm$core$String$fromChar,
+						var outputChar = elm$core$Char$fromCode(
 							A2(author$project$BFRunner$getTapeValue, state.x, state.v));
-						var output = A2(elm$core$String$append, state.cf, outputChar);
+						var output = A2(elm$core$List$cons, outputChar, state.cf);
 						return _Utils_update(
 							state,
 							{j: indices, cf: output});
@@ -7417,6 +7404,13 @@ var author$project$Main$viewOfBFTokenTableItem = F2(
 					elm$html$Html$text(table.b)
 				]));
 	});
+var elm$core$String$concat = function (strings) {
+	return A2(elm$core$String$join, '', strings);
+};
+var elm$core$String$cons = _String_cons;
+var elm$core$String$fromChar = function (_char) {
+	return A2(elm$core$String$cons, _char, '');
+};
 var elm$html$Html$h1 = _VirtualDom_node('h1');
 var elm$html$Html$p = _VirtualDom_node('p');
 var elm$core$Maybe$andThen = F2(
@@ -9771,7 +9765,12 @@ var author$project$Main$view = function (model) {
 												_List_Nil,
 												_List_fromArray(
 													[
-														elm$html$Html$text(model.f.cf),
+														elm$html$Html$text(
+														elm$core$String$concat(
+															A2(
+																elm$core$List$map,
+																elm$core$String$fromChar,
+																elm$core$List$reverse(model.f.cf)))),
 														A2(
 														elm$html$Html$span,
 														_List_fromArray(

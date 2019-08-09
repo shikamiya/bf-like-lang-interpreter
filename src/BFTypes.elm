@@ -43,7 +43,7 @@ type alias BFRunningState =
     , tapePointer : Int
     , input : String
     , inputPointer : Int
-    , output : String
+    , output : List Char
     , error : Maybe String
     }
 
