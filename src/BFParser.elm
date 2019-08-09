@@ -130,7 +130,12 @@ parseTokensHelper cmdTable =
 
                                         LoopEnd ->
                                             if depth <= 1 then
-                                                addCommandIntoCurrentList memo (BFCommand { token | error = Just TooManyLoopEnd })
+                                                BFCommand
+                                                    { token
+                                                        | kind = NoOp
+                                                        , error = Just TooManyLoopEnd
+                                                    }
+                                                    |> addCommandIntoCurrentList memo
 
                                             else
                                                 finalizeLoopCommandWithFullStack memo (BFCommand token)
