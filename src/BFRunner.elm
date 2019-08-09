@@ -1,4 +1,4 @@
-module BFRunner exposing (bfRun, bfStepRun, getTapeValue, initialBFTape, initialRunningState)
+module BFRunner exposing (getTapeValue, initialBFTape, initialRunningState, runBFCommandByStep, runBFCommands)
 
 import Array exposing (Array)
 import BFTypes exposing (BFCommand(..), BFParseError(..), BFRunningState, BFTape(..), BFTokenKind(..))
@@ -48,40 +48,16 @@ decreaseTapePointer current =
 
 increaseTapeValue : BFTape -> Int -> BFTape
 increaseTapeValue tape pos =
-    let
-        (BFTape tapeArray) =
-            tape
-
-        value =
-            Array.get pos tapeArray
-                |> Maybe.withDefault 0
-    in
-    (if 255 < value + 1 then
-        Array.set pos 0 tapeArray
-
-     else
-        Array.set pos (value + 1) tapeArray
-    )
-        |> BFTape
+    getTapeValue tape pos
+        + 1
+        |> setTapeValue tape pos
 
 
 decreaseTapeValue : BFTape -> Int -> BFTape
 decreaseTapeValue tape pos =
-    let
-        (BFTape tapeArray) =
-            tape
-
-        value =
-            Array.get pos tapeArray
-                |> Maybe.withDefault 0
-    in
-    (if value < 1 then
-        Array.set pos 255 tapeArray
-
-     else
-        Array.set pos (value - 1) tapeArray
-    )
-        |> BFTape
+    getTapeValue tape pos
+        - 1
+        |> setTapeValue tape pos
 
 
 getTapeValue : BFTape -> Int -> Int
@@ -89,12 +65,9 @@ getTapeValue tape pos =
     let
         (BFTape tapeArray) =
             tape
-
-        value =
-            Array.get pos tapeArray
-                |> Maybe.withDefault 0
     in
-    value
+    Array.get pos tapeArray
+        |> Maybe.withDefault 0
 
 
 setTapeValue : BFTape -> Int -> Int -> BFTape
@@ -105,53 +78,44 @@ setTapeValue tape pos value =
 
         modValue =
             modBy 256 value
-
-        newTape =
-            Array.set pos modValue tapeArray
-                |> BFTape
     in
-    newTape
+    Array.set pos modValue tapeArray
+        |> BFTape
 
 
-bfRun : BFRunningState -> BFRunningState
-bfRun state =
+runBFCommands : BFRunningState -> BFRunningState
+runBFCommands state =
     let
         newState =
-            bfStepRun state
+            runBFCommandByStep state
     in
     case newState.error of
         Nothing ->
-            bfRun newState
+            runBFCommands newState
 
         Just _ ->
             newState
 
 
-bfStepRun : BFRunningState -> BFRunningState
-bfStepRun state =
+runBFCommandByStep : BFRunningState -> BFRunningState
+runBFCommandByStep state =
     let
-        cmds =
-            state.commands
-
-        inputStr =
-            state.input
-
         indices =
-            getNextIndices cmds state.currentIndices
+            getNextIndices state.commands state.currentIndices
 
         cmd =
-            getBFCommandByIndices cmds indices
+            getBFCommandByIndices state.commands indices
     in
     case cmd of
         Just (BFCommand token) ->
             case token.kind of
                 NoOp ->
-                    -- shouldn't occur
+                    -- shouldn't occur, but just Run next command
                     let
                         nextState =
                             { state | currentIndices = indices }
                     in
-                    bfStepRun nextState
+                    runBFCommandByStep nextState
 
                 LoopStart ->
                     case getTapeValue state.tape state.tapePointer of
@@ -166,23 +130,27 @@ bfStepRun state =
                                         | currentIndices = nextIndices
                                     }
                             in
-                            bfStepRun nextState
+                            -- ! remove executing next command
+                            runBFCommandByStep nextState
 
                         _ ->
-                            bfStepRun
+                            -- ! remove executing next command
+                            runBFCommandByStep
                                 { state
                                     | currentIndices = indices
                                 }
 
                 LoopEnd ->
                     let
+                        -- back to LoopStart, take 'getNextIndices' into account
                         loopStartIndices =
                             -1 :: Maybe.withDefault [] (List.tail indices)
 
                         nextState =
                             { state | currentIndices = loopStartIndices }
                     in
-                    bfStepRun nextState
+                    -- ! remove executing next command
+                    runBFCommandByStep nextState
 
                 IncreasePointer ->
                     case increaseTapePointer state.tapePointer of
@@ -215,7 +183,7 @@ bfStepRun state =
                 ReadInput ->
                     let
                         maybeInput =
-                            String.dropLeft state.inputPointer inputStr
+                            String.dropLeft state.inputPointer state.input
                                 |> String.uncons
                     in
                     case maybeInput of
@@ -227,6 +195,7 @@ bfStepRun state =
                             }
 
                         Nothing ->
+                            -- Read Nothing : Do Nothing
                             { state
                                 | currentIndices = indices
                                 , inputPointer = state.inputPointer + 1
@@ -237,7 +206,7 @@ bfStepRun state =
                         outputChar =
                             getTapeValue state.tape state.tapePointer
                                 |> Char.fromCode
-                                |> String.fromChar
+                                >> String.fromChar
 
                         output =
                             String.append state.output outputChar
@@ -248,15 +217,15 @@ bfStepRun state =
                     }
 
         Just (BFLoopFunc _) ->
-            -- shouldn't occur
+            -- shouldn't occur, but Enter and Run
             let
                 nextState =
                     { state | currentIndices = indices }
             in
-            bfStepRun nextState
+            runBFCommandByStep nextState
 
         Nothing ->
-            -- end
+            -- End of Program
             { state | error = Just "[End]" }
 
 
@@ -274,22 +243,28 @@ skipUntilNextBFCommand cmds pos =
     in
     case cmd of
         Nothing ->
-            case List.tail pos of
-                Just ((_ :: _) as parentPos) ->
+            -- beyond commands
+            case pos of
+                (_ :: (_ :: _)) as parentPos ->
+                    -- has Parent : End of LoopFunc
                     getNextIndices cmds parentPos
 
                 _ ->
+                    -- don't have any parent : End of Program
                     pos
 
         Just (BFCommand token) ->
             case token.kind of
                 NoOp ->
+                    -- NoOp : Skip
                     getNextIndices cmds pos
 
                 _ ->
+                    -- Normal Command
                     pos
 
         Just (BFLoopFunc _) ->
+            -- LoopFunc : Enter and Skip until LoopStart (should skip nothing)
             0
                 :: pos
                 |> skipUntilNextBFCommand cmds

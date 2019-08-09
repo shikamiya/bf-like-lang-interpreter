@@ -2,7 +2,7 @@ module Main exposing (main)
 
 import Array exposing (Array)
 import BFParser exposing (parseTokens)
-import BFRunner exposing (bfRun, bfStepRun, initialRunningState)
+import BFRunner exposing (initialRunningState, runBFCommandByStep, runBFCommands)
 import BFTypes exposing (BFCommand(..), BFParseError(..), BFRunningState, BFTape(..), BFTokenKind(..), BFTokenTable)
 import Bootstrap.Button as Button
 import Bootstrap.ButtonGroup as ButtonGroup
@@ -281,7 +281,7 @@ update msg model =
         Run ->
             let
                 state =
-                    bfRun { initialRunningState | commands = model.state.commands, input = model.state.input }
+                    runBFCommands { initialRunningState | commands = model.state.commands, input = model.state.input }
             in
             { model | state = state }
                 |> withCmdNone
@@ -289,7 +289,7 @@ update msg model =
         StepRun ->
             let
                 state =
-                    bfStepRun model.state
+                    runBFCommandByStep model.state
             in
             { model | state = state }
                 |> withCmdNone

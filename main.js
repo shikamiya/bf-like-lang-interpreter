@@ -784,11 +784,11 @@ function _Debug_crash_UNUSED(identifier, fact1, fact2, fact3, fact4)
 
 function _Debug_regionToString(region)
 {
-	if (region.cl.au === region.cE.au)
+	if (region.cm.au === region.cE.au)
 	{
-		return 'on line ' + region.cl.au;
+		return 'on line ' + region.cm.au;
 	}
-	return 'on lines ' + region.cl.au + ' through ' + region.cE.au;
+	return 'on lines ' + region.cm.au + ' through ' + region.cE.au;
 }
 
 
@@ -2827,8 +2827,8 @@ var _VirtualDom_mapEventRecord = F2(function(func, record)
 {
 	return {
 		D: func(record.D),
-		cn: record.cn,
-		ci: record.ci
+		co: record.co,
+		cj: record.cj
 	}
 });
 
@@ -3097,10 +3097,10 @@ function _VirtualDom_makeCallback(eventNode, initialHandler)
 
 		var value = result.a;
 		var message = !tag ? value : tag < 3 ? value.a : value.D;
-		var stopPropagation = tag == 1 ? value.b : tag == 3 && value.cn;
+		var stopPropagation = tag == 1 ? value.b : tag == 3 && value.co;
 		var currentEventNode = (
 			stopPropagation && event.stopPropagation(),
-			(tag == 2 ? value.b : tag == 3 && value.ci) && event.preventDefault(),
+			(tag == 2 ? value.b : tag == 3 && value.cj) && event.preventDefault(),
 			eventNode
 		);
 		var tagger;
@@ -4783,12 +4783,12 @@ var elm$core$Array$fromList = function (list) {
 };
 var elm$core$Maybe$Nothing = {$: 1};
 var author$project$BFRunner$initialRunningState = {
-	cA: elm$core$Array$fromList(_List_Nil),
+	b4: elm$core$Array$fromList(_List_Nil),
 	j: _List_Nil,
 	dA: elm$core$Maybe$Nothing,
 	cN: '',
 	_: 0,
-	ce: '',
+	cf: '',
 	x: author$project$BFRunner$initialBFTape,
 	v: 0
 };
@@ -5084,58 +5084,36 @@ var author$project$BFParser$addCommandIntoList = F2(
 		var commands = _n0;
 		return A2(elm$core$List$cons, cmd, commands);
 	});
-var elm$core$List$head = function (list) {
-	if (list.b) {
-		var x = list.a;
-		var xs = list.b;
-		return elm$core$Maybe$Just(x);
-	} else {
-		return elm$core$Maybe$Nothing;
-	}
-};
-var elm$core$List$tail = function (list) {
-	if (list.b) {
-		var x = list.a;
-		var xs = list.b;
-		return elm$core$Maybe$Just(xs);
-	} else {
-		return elm$core$Maybe$Nothing;
-	}
-};
-var elm$core$Maybe$withDefault = F2(
-	function (_default, maybe) {
-		if (!maybe.$) {
-			var value = maybe.a;
-			return value;
-		} else {
-			return _default;
-		}
-	});
 var author$project$BFParser$addCommandIntoCurrentList = F2(
 	function (stack, cmd) {
-		var _n0 = stack;
-		var stackList = _n0;
-		var ancestorsList = A2(
-			elm$core$Maybe$withDefault,
-			_List_Nil,
-			elm$core$List$tail(stackList));
-		var currentList = A2(
-			elm$core$Maybe$withDefault,
-			_List_Nil,
-			elm$core$List$head(stackList));
+		var _n0 = function () {
+			if (stack.b) {
+				var _n2 = stack;
+				var x = _n2.a;
+				var xs = _n2.b;
+				return _Utils_Tuple2(x, xs);
+			} else {
+				return _Utils_Tuple2(_List_Nil, _List_Nil);
+			}
+		}();
+		var current = _n0.a;
+		var ancestors = _n0.b;
 		return A2(
 			elm$core$List$cons,
-			A2(author$project$BFParser$addCommandIntoList, currentList, cmd),
-			ancestorsList);
+			A2(author$project$BFParser$addCommandIntoList, current, cmd),
+			ancestors);
 	});
+var elm$core$List$singleton = function (value) {
+	return _List_fromArray(
+		[value]);
+};
 var author$project$BFParser$beginNewLoopCommand = F2(
 	function (stack, cmd) {
 		var _n0 = stack;
 		var stackList = _n0;
 		return A2(
 			elm$core$List$cons,
-			_List_fromArray(
-				[cmd]),
+			elm$core$List$singleton(cmd),
 			stackList);
 	});
 var author$project$BFParser$reverseCommandList = function (list) {
@@ -5149,26 +5127,24 @@ var author$project$BFTypes$BFLoopFunc = function (a) {
 };
 var author$project$BFParser$finalizeLoopCommand = F2(
 	function (stack, cmd) {
-		var _n0 = stack;
-		var stackList = _n0;
-		var ancestorsList = A2(
-			elm$core$Maybe$withDefault,
-			_List_Nil,
-			elm$core$List$tail(stackList));
-		var currentList = A2(
-			elm$core$Maybe$withDefault,
-			_List_Nil,
-			elm$core$List$head(stackList));
+		var _n0 = function () {
+			if (stack.b) {
+				var _n2 = stack;
+				var x = _n2.a;
+				var xs = _n2.b;
+				return _Utils_Tuple2(x, xs);
+			} else {
+				return _Utils_Tuple2(_List_Nil, _List_Nil);
+			}
+		}();
+		var current = _n0.a;
+		var ancestors = _n0.b;
 		var commands = author$project$BFParser$reverseCommandList(
-			A2(author$project$BFParser$addCommandIntoList, currentList, cmd));
+			A2(author$project$BFParser$addCommandIntoList, current, cmd));
 		return A2(
 			author$project$BFParser$addCommandIntoCurrentList,
-			ancestorsList,
+			ancestors,
 			author$project$BFTypes$BFLoopFunc(commands));
-	});
-var author$project$BFParser$finalizeLoopCommandWithFullStack = F2(
-	function (stack, cmd) {
-		return A2(author$project$BFParser$finalizeLoopCommand, stack, cmd);
 	});
 var author$project$BFTypes$BFToken = F3(
 	function (kind, value, error) {
@@ -5198,7 +5174,7 @@ var elm$parser$Parser$Advanced$AddRight = F2(
 	});
 var elm$parser$Parser$Advanced$DeadEnd = F4(
 	function (row, col, problem, contextStack) {
-		return {cy: col, dy: contextStack, c3: problem, db: row};
+		return {cz: col, dy: contextStack, c3: problem, db: row};
 	});
 var elm$parser$Parser$Advanced$Empty = {$: 0};
 var elm$parser$Parser$Advanced$fromState = F2(
@@ -5206,7 +5182,7 @@ var elm$parser$Parser$Advanced$fromState = F2(
 		return A2(
 			elm$parser$Parser$Advanced$AddRight,
 			elm$parser$Parser$Advanced$Empty,
-			A4(elm$parser$Parser$Advanced$DeadEnd, s.db, s.cy, x, s.c));
+			A4(elm$parser$Parser$Advanced$DeadEnd, s.db, s.cz, x, s.c));
 	});
 var elm$parser$Parser$Advanced$isSubChar = _Parser_isSubChar;
 var elm$parser$Parser$Advanced$chompIf = F2(
@@ -5220,11 +5196,11 @@ var elm$parser$Parser$Advanced$chompIf = F2(
 				elm$parser$Parser$Advanced$Good,
 				true,
 				0,
-				{cy: 1, c: s.c, d: s.d, b: s.b + 1, db: s.db + 1, a: s.a}) : A3(
+				{cz: 1, c: s.c, d: s.d, b: s.b + 1, db: s.db + 1, a: s.a}) : A3(
 				elm$parser$Parser$Advanced$Good,
 				true,
 				0,
-				{cy: s.cy + 1, c: s.c, d: s.d, b: newOffset, db: s.db, a: s.a}));
+				{cz: s.cz + 1, c: s.c, d: s.d, b: newOffset, db: s.db, a: s.a}));
 		};
 	});
 var elm$parser$Parser$chompIf = function (isGood) {
@@ -5283,8 +5259,8 @@ var elm$parser$Parser$Advanced$map = F2(
 var elm$parser$Parser$map = elm$parser$Parser$Advanced$map;
 var author$project$BFParser$parseNoOpToken = A2(
 	elm$parser$Parser$map,
-	function (x) {
-		return A3(author$project$BFTypes$BFToken, 0, x, elm$core$Maybe$Nothing);
+	function (value) {
+		return A3(author$project$BFTypes$BFToken, 0, value, elm$core$Maybe$Nothing);
 	},
 	elm$parser$Parser$getChompedString(
 		elm$parser$Parser$chompIf(
@@ -5358,10 +5334,6 @@ var elm$core$List$map = F2(
 			_List_Nil,
 			xs);
 	});
-var elm$core$Tuple$second = function (_n0) {
-	var y = _n0.b;
-	return y;
-};
 var elm$parser$Parser$Advanced$map2 = F3(
 	function (func, _n0, _n1) {
 		var parseA = _n0;
@@ -5470,7 +5442,7 @@ var elm$parser$Parser$Advanced$token = function (_n0) {
 	var expecting = _n0.b;
 	var progress = !elm$core$String$isEmpty(str);
 	return function (s) {
-		var _n1 = A5(elm$parser$Parser$Advanced$isSubString, str, s.b, s.db, s.cy, s.a);
+		var _n1 = A5(elm$parser$Parser$Advanced$isSubString, str, s.b, s.db, s.cz, s.a);
 		var newOffset = _n1.a;
 		var newRow = _n1.b;
 		var newCol = _n1.c;
@@ -5481,7 +5453,7 @@ var elm$parser$Parser$Advanced$token = function (_n0) {
 			elm$parser$Parser$Advanced$Good,
 			progress,
 			0,
-			{cy: newCol, c: s.c, d: s.d, b: newOffset, db: newRow, a: s.a});
+			{cz: newCol, c: s.c, d: s.d, b: newOffset, db: newRow, a: s.a});
 	};
 };
 var elm$parser$Parser$token = function (str) {
@@ -5489,27 +5461,44 @@ var elm$parser$Parser$token = function (str) {
 		elm$parser$Parser$toToken(str));
 };
 var author$project$BFParser$parseTokenByTable = function (table) {
-	var _n0 = table;
-	var tokenTable = _n0.a;
 	return elm$parser$Parser$oneOf(
 		A2(
 			elm$core$List$map,
 			function (x) {
-				var value = x.b;
-				var kind = x.a;
+				var _n0 = x;
+				var kind = _n0.a;
+				var value = _n0.b;
 				return A2(
 					elm$parser$Parser$ignorer,
 					elm$parser$Parser$succeed(
 						A3(author$project$BFTypes$BFToken, kind, value, elm$core$Maybe$Nothing)),
 					elm$parser$Parser$token(value));
 			},
-			tokenTable));
+			table.a));
 };
 var author$project$BFTypes$BFCommand = function (a) {
 	return {$: 0, a: a};
 };
 var author$project$BFTypes$InsufficientLoopEnd = 1;
 var author$project$BFTypes$TooManyLoopEnd = 0;
+var elm$core$List$head = function (list) {
+	if (list.b) {
+		var x = list.a;
+		var xs = list.b;
+		return elm$core$Maybe$Just(x);
+	} else {
+		return elm$core$Maybe$Nothing;
+	}
+};
+var elm$core$Maybe$withDefault = F2(
+	function (_default, maybe) {
+		if (!maybe.$) {
+			var value = maybe.a;
+			return value;
+		} else {
+			return _default;
+		}
+	});
 var elm$parser$Parser$Done = function (a) {
 	return {$: 1, a: a};
 };
@@ -5629,7 +5618,7 @@ var author$project$BFParser$parseTokensHelper = function (cmdTable) {
 														dA: elm$core$Maybe$Just(0),
 														cT: 0
 													}))) : A2(
-											author$project$BFParser$finalizeLoopCommandWithFullStack,
+											author$project$BFParser$finalizeLoopCommand,
 											memo,
 											author$project$BFTypes$BFCommand(token));
 									default:
@@ -5692,10 +5681,10 @@ var author$project$BFParser$parseTokensHelper = function (cmdTable) {
 };
 var elm$parser$Parser$DeadEnd = F3(
 	function (row, col, problem) {
-		return {cy: col, c3: problem, db: row};
+		return {cz: col, c3: problem, db: row};
 	});
 var elm$parser$Parser$problemToDeadEnd = function (p) {
-	return A3(elm$parser$Parser$DeadEnd, p.db, p.cy, p.c3);
+	return A3(elm$parser$Parser$DeadEnd, p.db, p.cz, p.c3);
 };
 var elm$parser$Parser$Advanced$bagToList = F2(
 	function (bag, list) {
@@ -5727,7 +5716,7 @@ var elm$parser$Parser$Advanced$run = F2(
 	function (_n0, src) {
 		var parse = _n0;
 		var _n1 = parse(
-			{cy: 1, c: _List_Nil, d: 1, b: 0, db: 1, a: src});
+			{cz: 1, c: _List_Nil, d: 1, b: 0, db: 1, a: src});
 		if (!_n1.$) {
 			var value = _n1.b;
 			return elm$core$Result$Ok(value);
@@ -5798,6 +5787,15 @@ var elm$core$Array$get = F2(
 			A2(elm$core$Elm$JsArray$unsafeGet, elm$core$Array$bitMask & index, tail)) : elm$core$Maybe$Just(
 			A3(elm$core$Array$getHelp, startShift, index, tree)));
 	});
+var author$project$BFRunner$getTapeValue = F2(
+	function (tape, pos) {
+		var _n0 = tape;
+		var tapeArray = _n0;
+		return A2(
+			elm$core$Maybe$withDefault,
+			0,
+			A2(elm$core$Array$get, pos, tapeArray));
+	});
 var elm$core$Elm$JsArray$unsafeSet = _JsArray_unsafeSet;
 var elm$core$Array$setHelp = F4(
 	function (shift, index, value, tree) {
@@ -5841,15 +5839,21 @@ var elm$core$Array$set = F3(
 			A4(elm$core$Array$setHelp, startShift, index, value, tree),
 			tail));
 	});
-var author$project$BFRunner$decreaseTapeValue = F2(
-	function (tape, pos) {
+var elm$core$Basics$modBy = _Basics_modBy;
+var author$project$BFRunner$setTapeValue = F3(
+	function (tape, pos, value) {
+		var modValue = A2(elm$core$Basics$modBy, 256, value);
 		var _n0 = tape;
 		var tapeArray = _n0;
-		var value = A2(
-			elm$core$Maybe$withDefault,
-			0,
-			A2(elm$core$Array$get, pos, tapeArray));
-		return (value < 1) ? A3(elm$core$Array$set, pos, 255, tapeArray) : A3(elm$core$Array$set, pos, value - 1, tapeArray);
+		return A3(elm$core$Array$set, pos, modValue, tapeArray);
+	});
+var author$project$BFRunner$decreaseTapeValue = F2(
+	function (tape, pos) {
+		return A3(
+			author$project$BFRunner$setTapeValue,
+			tape,
+			pos,
+			A2(author$project$BFRunner$getTapeValue, tape, pos) - 1);
 	});
 var author$project$BFRunner$getBFCommandByRevIndices = F2(
 	function (cmds, pos) {
@@ -5908,9 +5912,9 @@ var author$project$BFRunner$skipUntilNextBFCommand = F2(
 	function (cmds, pos) {
 		var cmd = A2(author$project$BFRunner$getBFCommandByIndices, cmds, pos);
 		if (cmd.$ === 1) {
-			var _n1 = elm$core$List$tail(pos);
-			if ((!_n1.$) && _n1.a.b) {
-				var parentPos = _n1.a;
+			if (pos.b && pos.b.b) {
+				var parentPos = pos;
+				var _n2 = parentPos.b;
 				return A2(author$project$BFRunner$getNextIndices, cmds, parentPos);
 			} else {
 				return pos;
@@ -5918,8 +5922,8 @@ var author$project$BFRunner$skipUntilNextBFCommand = F2(
 		} else {
 			if (!cmd.a.$) {
 				var token = cmd.a.a;
-				var _n2 = token.cT;
-				if (!_n2) {
+				var _n3 = token.cT;
+				if (!_n3) {
 					return A2(author$project$BFRunner$getNextIndices, cmds, pos);
 				} else {
 					return pos;
@@ -5932,39 +5936,32 @@ var author$project$BFRunner$skipUntilNextBFCommand = F2(
 			}
 		}
 	});
-var author$project$BFRunner$getTapeValue = F2(
-	function (tape, pos) {
-		var _n0 = tape;
-		var tapeArray = _n0;
-		var value = A2(
-			elm$core$Maybe$withDefault,
-			0,
-			A2(elm$core$Array$get, pos, tapeArray));
-		return value;
-	});
 var author$project$BFRunner$increaseTapePointer = function (current) {
 	return (_Utils_cmp(current + 1, author$project$BFRunner$tapeSize) < 0) ? elm$core$Result$Ok(current + 1) : elm$core$Result$Err('Tape Pointer Limit Exceed');
 };
 var author$project$BFRunner$increaseTapeValue = F2(
 	function (tape, pos) {
-		var _n0 = tape;
-		var tapeArray = _n0;
-		var value = A2(
-			elm$core$Maybe$withDefault,
-			0,
-			A2(elm$core$Array$get, pos, tapeArray));
-		return (255 < (value + 1)) ? A3(elm$core$Array$set, pos, 0, tapeArray) : A3(elm$core$Array$set, pos, value + 1, tapeArray);
+		return A3(
+			author$project$BFRunner$setTapeValue,
+			tape,
+			pos,
+			A2(author$project$BFRunner$getTapeValue, tape, pos) + 1);
 	});
-var elm$core$Basics$modBy = _Basics_modBy;
-var author$project$BFRunner$setTapeValue = F3(
-	function (tape, pos, value) {
-		var modValue = A2(elm$core$Basics$modBy, 256, value);
-		var _n0 = tape;
-		var tapeArray = _n0;
-		var newTape = A3(elm$core$Array$set, pos, modValue, tapeArray);
-		return newTape;
+var elm$core$Basics$composeR = F3(
+	function (f, g, x) {
+		return g(
+			f(x));
 	});
 var elm$core$Char$fromCode = _Char_fromCode;
+var elm$core$List$tail = function (list) {
+	if (list.b) {
+		var x = list.a;
+		var xs = list.b;
+		return elm$core$Maybe$Just(xs);
+	} else {
+		return elm$core$Maybe$Nothing;
+	}
+};
 var elm$core$String$append = _String_append;
 var elm$core$String$dropLeft = F2(
 	function (n, string) {
@@ -5978,13 +5975,11 @@ var elm$core$String$cons = _String_cons;
 var elm$core$String$fromChar = function (_char) {
 	return A2(elm$core$String$cons, _char, '');
 };
-var author$project$BFRunner$bfStepRun = function (state) {
-	bfStepRun:
+var author$project$BFRunner$runBFCommandByStep = function (state) {
+	runBFCommandByStep:
 	while (true) {
-		var inputStr = state.cN;
-		var cmds = state.cA;
-		var indices = A2(author$project$BFRunner$getNextIndices, cmds, state.j);
-		var cmd = A2(author$project$BFRunner$getBFCommandByIndices, cmds, indices);
+		var indices = A2(author$project$BFRunner$getNextIndices, state.b4, state.j);
+		var cmd = A2(author$project$BFRunner$getBFCommandByIndices, state.b4, indices);
 		if (!cmd.$) {
 			if (!cmd.a.$) {
 				var token = cmd.a.a;
@@ -5996,7 +5991,7 @@ var author$project$BFRunner$bfStepRun = function (state) {
 							{j: indices});
 						var $temp$state = nextState;
 						state = $temp$state;
-						continue bfStepRun;
+						continue runBFCommandByStep;
 					case 1:
 						var _n2 = A2(author$project$BFRunner$getTapeValue, state.x, state.v);
 						if (!_n2) {
@@ -6009,13 +6004,13 @@ var author$project$BFRunner$bfStepRun = function (state) {
 								{j: nextIndices});
 							var $temp$state = nextState;
 							state = $temp$state;
-							continue bfStepRun;
+							continue runBFCommandByStep;
 						} else {
 							var $temp$state = _Utils_update(
 								state,
 								{j: indices});
 							state = $temp$state;
-							continue bfStepRun;
+							continue runBFCommandByStep;
 						}
 					case 2:
 						var loopStartIndices = A2(
@@ -6030,7 +6025,7 @@ var author$project$BFRunner$bfStepRun = function (state) {
 							{j: loopStartIndices});
 						var $temp$state = nextState;
 						state = $temp$state;
-						continue bfStepRun;
+						continue runBFCommandByStep;
 					case 5:
 						var _n3 = author$project$BFRunner$increaseTapePointer(state.v);
 						if (!_n3.$) {
@@ -6079,7 +6074,7 @@ var author$project$BFRunner$bfStepRun = function (state) {
 							});
 					case 7:
 						var maybeInput = elm$core$String$uncons(
-							A2(elm$core$String$dropLeft, state._, inputStr));
+							A2(elm$core$String$dropLeft, state._, state.cN));
 						if (!maybeInput.$) {
 							var _n6 = maybeInput.a;
 							var input = _n6.a;
@@ -6100,13 +6095,15 @@ var author$project$BFRunner$bfStepRun = function (state) {
 								{j: indices, _: state._ + 1});
 						}
 					default:
-						var outputChar = elm$core$String$fromChar(
-							elm$core$Char$fromCode(
-								A2(author$project$BFRunner$getTapeValue, state.x, state.v)));
-						var output = A2(elm$core$String$append, state.ce, outputChar);
+						var outputChar = A3(
+							elm$core$Basics$composeR,
+							elm$core$Char$fromCode,
+							elm$core$String$fromChar,
+							A2(author$project$BFRunner$getTapeValue, state.x, state.v));
+						var output = A2(elm$core$String$append, state.cf, outputChar);
 						return _Utils_update(
 							state,
-							{j: indices, ce: output});
+							{j: indices, cf: output});
 				}
 			} else {
 				var nextState = _Utils_update(
@@ -6114,7 +6111,7 @@ var author$project$BFRunner$bfStepRun = function (state) {
 					{j: indices});
 				var $temp$state = nextState;
 				state = $temp$state;
-				continue bfStepRun;
+				continue runBFCommandByStep;
 			}
 		} else {
 			return _Utils_update(
@@ -6125,15 +6122,15 @@ var author$project$BFRunner$bfStepRun = function (state) {
 		}
 	}
 };
-var author$project$BFRunner$bfRun = function (state) {
-	bfRun:
+var author$project$BFRunner$runBFCommands = function (state) {
+	runBFCommands:
 	while (true) {
-		var newState = author$project$BFRunner$bfStepRun(state);
+		var newState = author$project$BFRunner$runBFCommandByStep(state);
 		var _n0 = newState.dA;
 		if (_n0.$ === 1) {
 			var $temp$state = newState;
 			state = $temp$state;
-			continue bfRun;
+			continue runBFCommands;
 		} else {
 			return newState;
 		}
@@ -6194,7 +6191,7 @@ var author$project$Main$update = F2(
 				var state = model.f;
 				var commands = A2(
 					elm$core$Result$withDefault,
-					model.f.cA,
+					model.f.b4,
 					A2(author$project$BFParser$parseTokens, model.e.u.G, model.P));
 				return author$project$Main$withCmdNone(
 					_Utils_update(
@@ -6202,7 +6199,7 @@ var author$project$Main$update = F2(
 						{
 							f: _Utils_update(
 								state,
-								{cA: commands})
+								{b4: commands})
 						}));
 			case 2:
 				var input = msg.a;
@@ -6289,19 +6286,19 @@ var author$project$Main$update = F2(
 						{
 							f: _Utils_update(
 								author$project$BFRunner$initialRunningState,
-								{cA: model.f.cA, cN: model.f.cN})
+								{b4: model.f.b4, cN: model.f.cN})
 						}));
 			case 10:
-				var state = author$project$BFRunner$bfRun(
+				var state = author$project$BFRunner$runBFCommands(
 					_Utils_update(
 						author$project$BFRunner$initialRunningState,
-						{cA: model.f.cA, cN: model.f.cN}));
+						{b4: model.f.b4, cN: model.f.cN}));
 				return author$project$Main$withCmdNone(
 					_Utils_update(
 						model,
 						{f: state}));
 			default:
-				var state = author$project$BFRunner$bfStepRun(model.f);
+				var state = author$project$BFRunner$runBFCommandByStep(model.f);
 				return author$project$Main$withCmdNone(
 					_Utils_update(
 						model,
@@ -6327,7 +6324,7 @@ var elm$browser$Browser$AnimationManager$Time = function (a) {
 };
 var elm$browser$Browser$AnimationManager$State = F3(
 	function (subs, request, oldTime) {
-		return {cd: oldTime, c9: request, dh: subs};
+		return {ce: oldTime, c9: request, dh: subs};
 	});
 var elm$core$Task$succeed = _Scheduler_succeed;
 var elm$browser$Browser$AnimationManager$init = elm$core$Task$succeed(
@@ -6561,7 +6558,7 @@ var elm$core$Process$spawn = _Scheduler_spawn;
 var elm$browser$Browser$AnimationManager$onEffects = F3(
 	function (router, subs, _n0) {
 		var request = _n0.c9;
-		var oldTime = _n0.cd;
+		var oldTime = _n0.ce;
 		var _n1 = _Utils_Tuple2(request, subs);
 		if (_n1.a.$ === 1) {
 			if (!_n1.b.b) {
@@ -6610,7 +6607,7 @@ var elm$time$Time$millisToPosix = elm$core$Basics$identity;
 var elm$browser$Browser$AnimationManager$onSelfMsg = F3(
 	function (router, newTime, _n0) {
 		var subs = _n0.dh;
-		var oldTime = _n0.cd;
+		var oldTime = _n0.ce;
 		var send = function (sub) {
 			if (!sub.$) {
 				var tagger = sub.a;
@@ -7239,9 +7236,9 @@ var elm$core$List$repeat = F2(
 	function (n, value) {
 		return A3(elm$core$List$repeatHelp, _List_Nil, n, value);
 	});
-var elm$core$List$singleton = function (value) {
-	return _List_fromArray(
-		[value]);
+var elm$core$Tuple$second = function (_n0) {
+	var y = _n0.b;
+	return y;
 };
 var elm$html$Html$br = _VirtualDom_node('br');
 var elm$html$Html$span = _VirtualDom_node('span');
@@ -7950,7 +7947,7 @@ var rundis$elm_bootstrap$Bootstrap$Card$block = F3(
 			});
 	});
 var rundis$elm_bootstrap$Bootstrap$Card$config = function (options) {
-	return {b1: _List_Nil, b6: elm$core$Maybe$Nothing, ba: elm$core$Maybe$Nothing, b8: elm$core$Maybe$Nothing, b9: elm$core$Maybe$Nothing, c_: options};
+	return {b1: _List_Nil, b7: elm$core$Maybe$Nothing, ba: elm$core$Maybe$Nothing, b9: elm$core$Maybe$Nothing, ca: elm$core$Maybe$Nothing, c_: options};
 };
 var rundis$elm_bootstrap$Bootstrap$Card$Header = elm$core$Basics$identity;
 var rundis$elm_bootstrap$Bootstrap$Card$headerPrivate = F4(
@@ -8098,7 +8095,7 @@ var rundis$elm_bootstrap$Bootstrap$Card$view = function (_n0) {
 							var e = _n2;
 							return e;
 						},
-						conf.b9)
+						conf.ca)
 					])),
 			_Utils_ap(
 				rundis$elm_bootstrap$Bootstrap$Card$Internal$renderBlocks(conf.b1),
@@ -8113,14 +8110,14 @@ var rundis$elm_bootstrap$Bootstrap$Card$view = function (_n0) {
 								var e = _n3;
 								return e;
 							},
-							conf.b6),
+							conf.b7),
 							A2(
 							elm$core$Maybe$map,
 							function (_n4) {
 								var e = _n4;
 								return e;
 							},
-							conf.b8)
+							conf.b9)
 						])))));
 };
 var rundis$elm_bootstrap$Bootstrap$Card$Internal$BlockItem = elm$core$Basics$identity;
@@ -8676,7 +8673,7 @@ var rundis$elm_bootstrap$Bootstrap$Grid$Column = function (a) {
 var rundis$elm_bootstrap$Bootstrap$Grid$col = F2(
 	function (options, children) {
 		return rundis$elm_bootstrap$Bootstrap$Grid$Column(
-			{cx: children, c_: options});
+			{cy: children, c_: options});
 	});
 var rundis$elm_bootstrap$Bootstrap$Grid$containerFluid = F2(
 	function (attributes, children) {
@@ -8699,7 +8696,7 @@ var rundis$elm_bootstrap$Bootstrap$General$Internal$XS = 0;
 var rundis$elm_bootstrap$Bootstrap$Grid$Internal$Col = 0;
 var rundis$elm_bootstrap$Bootstrap$Grid$Internal$Width = F2(
 	function (screenSize, columnCount) {
-		return {cz: columnCount, de: screenSize};
+		return {cA: columnCount, de: screenSize};
 	});
 var rundis$elm_bootstrap$Bootstrap$Grid$Internal$applyColAlign = F2(
 	function (align_, options) {
@@ -8988,7 +8985,7 @@ var rundis$elm_bootstrap$Bootstrap$Grid$Internal$columnCountOption = function (s
 };
 var rundis$elm_bootstrap$Bootstrap$Grid$Internal$colWidthClass = function (_n0) {
 	var screenSize = _n0.de;
-	var columnCount = _n0.cz;
+	var columnCount = _n0.cA;
 	return elm$html$Html$Attributes$class(
 		'col' + (A2(
 			elm$core$Maybe$withDefault,
@@ -9195,7 +9192,7 @@ var rundis$elm_bootstrap$Bootstrap$Grid$Internal$verticalAlignOption = function 
 };
 var rundis$elm_bootstrap$Bootstrap$Grid$Internal$vAlignClass = F2(
 	function (prefix, _n0) {
-		var align = _n0.ct;
+		var align = _n0.cu;
 		var screenSize = _n0.de;
 		return elm$html$Html$Attributes$class(
 			_Utils_ap(
@@ -9285,7 +9282,7 @@ var rundis$elm_bootstrap$Bootstrap$Grid$renderCol = function (column) {
 	switch (column.$) {
 		case 0:
 			var options = column.a.c_;
-			var children = column.a.cx;
+			var children = column.a.cy;
 			return A2(
 				elm$html$Html$div,
 				rundis$elm_bootstrap$Bootstrap$Grid$Internal$colAttributes(options),
@@ -9295,7 +9292,7 @@ var rundis$elm_bootstrap$Bootstrap$Grid$renderCol = function (column) {
 			return e;
 		default:
 			var options = column.a.c_;
-			var children = column.a.cx;
+			var children = column.a.cy;
 			return A3(
 				elm$html$Html$Keyed$node,
 				'div',
@@ -9409,7 +9406,7 @@ var rundis$elm_bootstrap$Bootstrap$General$Internal$horizontalAlignOption = func
 	}
 };
 var rundis$elm_bootstrap$Bootstrap$General$Internal$hAlignClass = function (_n0) {
-	var align = _n0.ct;
+	var align = _n0.cu;
 	var screenSize = _n0.de;
 	return elm$html$Html$Attributes$class(
 		'justify-content-' + (A2(
@@ -9571,7 +9568,7 @@ var author$project$Main$view = function (model) {
 											A2(
 												elm$html$Html$p,
 												_List_Nil,
-												A3(author$project$Main$viewOfBFCommands, model, _List_Nil, model.f.cA)))
+												A3(author$project$Main$viewOfBFCommands, model, _List_Nil, model.f.b4)))
 										]),
 									A3(
 										rundis$elm_bootstrap$Bootstrap$Card$header,
@@ -9774,7 +9771,7 @@ var author$project$Main$view = function (model) {
 												_List_Nil,
 												_List_fromArray(
 													[
-														elm$html$Html$text(model.f.ce),
+														elm$html$Html$text(model.f.cf),
 														A2(
 														elm$html$Html$span,
 														_List_fromArray(

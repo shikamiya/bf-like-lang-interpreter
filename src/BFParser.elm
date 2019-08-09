@@ -15,19 +15,12 @@ type BFCommandStack
 
 parseTokenByTable : BFTokenTable -> Parser BFToken
 parseTokenByTable table =
-    let
-        ( tokenTable, _ ) =
-            table
-    in
-    tokenTable
+    Tuple.first table
         |> List.map
             (\x ->
                 let
-                    kind =
-                        Tuple.first x
-
-                    value =
-                        Tuple.second x
+                    ( kind, value ) =
+                        x
                 in
                 Parser.succeed (BFToken kind value Nothing)
                     |. Parser.token value
@@ -37,9 +30,10 @@ parseTokenByTable table =
 
 parseNoOpToken : Parser BFToken
 parseNoOpToken =
-    Parser.chompIf (always True)
+    always True
+        |> Parser.chompIf
         |> Parser.getChompedString
-        |> Parser.map (\x -> BFToken NoOp x Nothing)
+        |> Parser.map (\value -> BFToken NoOp value Nothing)
 
 
 addCommandIntoList : BFCommandList -> BFCommand -> BFCommandList
@@ -48,22 +42,25 @@ addCommandIntoList list cmd =
         (BFCommandList commands) =
             list
     in
-    BFCommandList (cmd :: commands)
+    cmd
+        :: commands
+        |> BFCommandList
 
 
 addCommandIntoCurrentList : BFCommandStack -> BFCommand -> BFCommandStack
 addCommandIntoCurrentList stack cmd =
     let
-        (BFCommandStack stackList) =
-            stack
+        ( current, ancestors ) =
+            case stack of
+                BFCommandStack (x :: xs) ->
+                    ( x, xs )
 
-        currentList =
-            Maybe.withDefault (BFCommandList []) (List.head stackList)
-
-        ancestorsList =
-            Maybe.withDefault [] (List.tail stackList)
+                BFCommandStack [] ->
+                    ( BFCommandList [], [] )
     in
-    BFCommandStack (addCommandIntoList currentList cmd :: ancestorsList)
+    addCommandIntoList current cmd
+        :: ancestors
+        |> BFCommandStack
 
 
 reverseCommandList : BFCommandList -> Array BFCommand
@@ -82,30 +79,26 @@ beginNewLoopCommand stack cmd =
         (BFCommandStack stackList) =
             stack
     in
-    BFCommandStack (BFCommandList [ cmd ] :: stackList)
+    BFCommandList (List.singleton cmd)
+        :: stackList
+        |> BFCommandStack
 
 
 finalizeLoopCommand : BFCommandStack -> BFCommand -> BFCommandStack
 finalizeLoopCommand stack cmd =
     let
-        (BFCommandStack stackList) =
-            stack
+        ( current, ancestors ) =
+            case stack of
+                BFCommandStack (x :: xs) ->
+                    ( x, xs )
 
-        currentList =
-            Maybe.withDefault (BFCommandList []) (List.head stackList)
+                BFCommandStack [] ->
+                    ( BFCommandList [], [] )
 
         commands =
-            reverseCommandList (addCommandIntoList currentList cmd)
-
-        ancestorsList =
-            Maybe.withDefault [] (List.tail stackList)
+            reverseCommandList (addCommandIntoList current cmd)
     in
-    addCommandIntoCurrentList (BFCommandStack ancestorsList) (BFLoopFunc commands)
-
-
-finalizeLoopCommandWithFullStack : BFCommandStack -> BFCommand -> BFCommandStack
-finalizeLoopCommandWithFullStack stack cmd =
-    finalizeLoopCommand stack cmd
+    addCommandIntoCurrentList (BFCommandStack ancestors) (BFLoopFunc commands)
 
 
 parseTokensHelper : BFTokenTable -> Parser (Array BFCommand)
@@ -138,7 +131,7 @@ parseTokensHelper cmdTable =
                                                     |> addCommandIntoCurrentList memo
 
                                             else
-                                                finalizeLoopCommandWithFullStack memo (BFCommand token)
+                                                finalizeLoopCommand memo (BFCommand token)
 
                                         _ ->
                                             addCommandIntoCurrentList memo (BFCommand token)
