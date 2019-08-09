@@ -5,6 +5,7 @@ import BFParser exposing (bfParseErrorToString, parseTokens)
 import BFRunner exposing (bfRun, bfStepRun, initialRunningState)
 import BFTypes exposing (BFCommand(..), BFParseError(..), BFRunningState, BFTape(..), BFTokenKind(..), BFTokenTable)
 import Bootstrap.Button as Button
+import Bootstrap.ButtonGroup as ButtonGroup
 import Bootstrap.CDN
 import Bootstrap.Card as Card
 import Bootstrap.Card.Block as Block
@@ -65,6 +66,7 @@ subscriptions model =
 
 type alias Model =
     { programContent : String
+    , displayNoOpCommand : Bool
     , tokenTableStates : TokenTableDropdowns
     , state : BFRunningState
     }
@@ -93,6 +95,7 @@ init flags =
 initialModel : Model
 initialModel =
     { programContent = ""
+    , displayNoOpCommand = True
     , tokenTableStates = initialTokenTableStates
     , state = initialRunningState
     }
@@ -157,6 +160,7 @@ type Msg
     | UpdateParserTokenTableDropDownState Dropdown.State
     | UpdateDisplayTokenTable BFTokenTable
     | UpdateDisplayTokenTableDropDownState Dropdown.State
+    | ChangeNoOpCommandVisibility Bool
     | ResetAll
     | ResetRunnningState
     | Run
@@ -262,6 +266,10 @@ update msg model =
             { model | tokenTableStates = tokenTableStates }
                 |> withCmdNone
 
+        ChangeNoOpCommandVisibility visibility ->
+            { model | displayNoOpCommand = visibility }
+                |> withCmdNone
+
         ResetAll ->
             initialModel
                 |> withCmdNone
@@ -329,16 +337,33 @@ view model =
             , Grid.col [ Col.lg6 ]
                 [ Card.config [ Card.attrs [ Html.Attributes.class "h-100" ] ]
                     |> Card.header []
-                        [ text "Parsed commands by: "
-                        , Dropdown.dropdown
-                            model.tokenTableStates.display.dropdownState
-                            { options = []
-                            , toggleMsg = UpdateDisplayTokenTableDropDownState
-                            , toggleButton =
-                                Dropdown.toggle [ Button.primary ] [ text <| Tuple.second model.tokenTableStates.display.tokenTable ]
-                            , items =
-                                List.map (viewOfBFTokenTableItem UpdateDisplayTokenTable) bfTokenTableList
-                            }
+                        [ Grid.row []
+                            [ Grid.col []
+                                [ text "Parsed commands by: "
+                                , Dropdown.dropdown
+                                    model.tokenTableStates.display.dropdownState
+                                    { options = []
+                                    , toggleMsg = UpdateDisplayTokenTableDropDownState
+                                    , toggleButton =
+                                        Dropdown.toggle [ Button.primary ] [ text <| Tuple.second model.tokenTableStates.display.tokenTable ]
+                                    , items =
+                                        List.map (viewOfBFTokenTableItem UpdateDisplayTokenTable) bfTokenTableList
+                                    }
+                                ]
+                            , Grid.col []
+                                [ text " Comments: "
+                                , ButtonGroup.radioButtonGroup [ ButtonGroup.small ]
+                                    [ ButtonGroup.radioButton
+                                        (model.displayNoOpCommand == True)
+                                        [ Button.primary, Button.onClick <| ChangeNoOpCommandVisibility True ]
+                                        [ text "Show" ]
+                                    , ButtonGroup.radioButton
+                                        (model.displayNoOpCommand == False)
+                                        [ Button.primary, Button.onClick <| ChangeNoOpCommandVisibility False ]
+                                        [ text "Hide" ]
+                                    ]
+                                ]
+                            ]
                         ]
                     |> Card.block []
                         [ Array.map (viewOfBFCommand model 0) model.state.commands
@@ -432,11 +457,16 @@ viewOfBFCommand model depth cmd =
                         Html.br [] [] :: currentSpacings
 
                     else
+                        let
+                            visible =
+                                isError || model.displayNoOpCommand
+                        in
                         Html.span
                             [ Html.Attributes.classList
                                 [ ( "text-muted", not isError )
                                 , ( "text-danger", isError )
                                 , ( "font-weight-bold", isError )
+                                , ( "d-none", not visible )
                                 ]
                             ]
                             [ text token.value ]
