@@ -1,7 +1,7 @@
 module Main exposing (main)
 
 import Array
-import BFParser exposing (bfParseErrorToString, parseTokens)
+import BFParser exposing (parseTokens)
 import BFRunner exposing (bfRun, bfStepRun, initialRunningState)
 import BFTypes exposing (BFCommand(..), BFParseError(..), BFRunningState, BFTape(..), BFTokenKind(..), BFTokenTable)
 import Bootstrap.Button as Button
@@ -444,7 +444,7 @@ viewOfBFCommand model depth cmd =
         BFCommand token ->
             let
                 isError =
-                    case bfParseErrorToString token.error of
+                    case token.error of
                         Just _ ->
                             True
 

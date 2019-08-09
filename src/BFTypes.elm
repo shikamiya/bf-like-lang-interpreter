@@ -1,4 +1,4 @@
-module BFTypes exposing (BFCommand(..), BFParseError(..), BFRunningState, BFTape(..), BFToken, BFTokenKind(..), BFTokenTable)
+module BFTypes exposing (BFCommand(..), BFParseError(..), BFRunningState, BFTape(..), BFToken, BFTokenKind(..), BFTokenTable, bfParseErrorToString)
 
 import Array exposing (Array)
 
@@ -19,7 +19,7 @@ type alias BFToken =
     { kind : BFTokenKind
     , value : String
     , index : Maybe Int
-    , error : BFParseError
+    , error : Maybe BFParseError
     }
 
 
@@ -33,8 +33,7 @@ type alias BFTokenTable =
 
 
 type BFParseError
-    = NoError
-    | TooManyLoopEnd
+    = TooManyLoopEnd
     | InsufficientLoopEnd
 
 
@@ -53,3 +52,13 @@ type alias BFRunningState =
 
 type BFTape
     = BFTape (Array Int)
+
+
+bfParseErrorToString : BFParseError -> String
+bfParseErrorToString error =
+    case error of
+        TooManyLoopEnd ->
+            "Loop End shouldn't be here"
+
+        InsufficientLoopEnd ->
+            "Loop End should be here"

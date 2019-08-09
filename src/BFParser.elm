@@ -1,4 +1,4 @@
-module BFParser exposing (bfParseErrorToString, parseTokens)
+module BFParser exposing (parseTokens)
 
 import Array exposing (Array)
 import BFTypes exposing (BFCommand(..), BFParseError(..), BFTape(..), BFToken, BFTokenKind(..), BFTokenTable)
@@ -19,19 +19,6 @@ type alias BFTokenParseMemo =
     }
 
 
-bfParseErrorToString : BFParseError -> Maybe String
-bfParseErrorToString error =
-    case error of
-        NoError ->
-            Nothing
-
-        TooManyLoopEnd ->
-            Just "Loop End shouldn't be here"
-
-        InsufficientLoopEnd ->
-            Just "Loop End should be here"
-
-
 parseTokenByTable : BFTokenTable -> Parser BFToken
 parseTokenByTable table =
     let
@@ -48,7 +35,7 @@ parseTokenByTable table =
                     value =
                         Tuple.second x
                 in
-                Parser.succeed (BFToken kind value Nothing NoError)
+                Parser.succeed (BFToken kind value Nothing Nothing)
                     |. Parser.token value
             )
         |> Parser.oneOf
@@ -58,7 +45,7 @@ parseNoOpToken : Parser BFToken
 parseNoOpToken =
     Parser.chompIf (always True)
         |> Parser.getChompedString
-        |> Parser.map (\x -> BFToken NoOp x Nothing NoError)
+        |> Parser.map (\x -> BFToken NoOp x Nothing Nothing)
 
 
 addCommandIntoList : BFCommandList -> BFCommand -> BFCommandList
@@ -152,7 +139,7 @@ parseTokensHelper cmdTable =
 
                                         LoopEnd ->
                                             if depth <= 1 then
-                                                addCommandIntoCurrentList memo.stack (BFCommand { token | error = TooManyLoopEnd })
+                                                addCommandIntoCurrentList memo.stack (BFCommand { token | error = Just TooManyLoopEnd })
 
                                             else
                                                 finalizeLoopCommandWithFullStack memo.stack (BFCommand { token | index = Just index })
@@ -190,7 +177,7 @@ parseTokensHelper cmdTable =
                                     else
                                         let
                                             (BFCommandStack innerStackList) =
-                                                BFCommand (BFToken LoopEnd "(Loop wasn't closed)" Nothing InsufficientLoopEnd)
+                                                BFCommand (BFToken LoopEnd "(Loop wasn't closed)" Nothing <| Just InsufficientLoopEnd)
                                                     |> finalizeLoopCommand (BFCommandStack [ current, list ])
                                         in
                                         List.head innerStackList

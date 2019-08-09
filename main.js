@@ -5179,7 +5179,6 @@ var author$project$BFTypes$BFToken = F4(
 	function (kind, value, index, error) {
 		return {dC: error, ab: index, dL: kind, dW: value};
 	});
-var author$project$BFTypes$NoError = 0;
 var author$project$BFTypes$NoOp = 0;
 var elm$core$Basics$always = F2(
 	function (a, _n0) {
@@ -5290,7 +5289,7 @@ var elm$parser$Parser$map = elm$parser$Parser$Advanced$map;
 var author$project$BFParser$parseNoOpToken = A2(
 	elm$parser$Parser$map,
 	function (x) {
-		return A4(author$project$BFTypes$BFToken, 0, x, elm$core$Maybe$Nothing, 0);
+		return A4(author$project$BFTypes$BFToken, 0, x, elm$core$Maybe$Nothing, elm$core$Maybe$Nothing);
 	},
 	elm$parser$Parser$getChompedString(
 		elm$parser$Parser$chompIf(
@@ -5506,7 +5505,7 @@ var author$project$BFParser$parseTokenByTable = function (table) {
 				return A2(
 					elm$parser$Parser$ignorer,
 					elm$parser$Parser$succeed(
-						A4(author$project$BFTypes$BFToken, kind, value, elm$core$Maybe$Nothing, 0)),
+						A4(author$project$BFTypes$BFToken, kind, value, elm$core$Maybe$Nothing, elm$core$Maybe$Nothing)),
 					elm$parser$Parser$token(value));
 			},
 			tokenTable));
@@ -5514,8 +5513,8 @@ var author$project$BFParser$parseTokenByTable = function (table) {
 var author$project$BFTypes$BFCommand = function (a) {
 	return {$: 0, a: a};
 };
-var author$project$BFTypes$InsufficientLoopEnd = 2;
-var author$project$BFTypes$TooManyLoopEnd = 1;
+var author$project$BFTypes$InsufficientLoopEnd = 1;
+var author$project$BFTypes$TooManyLoopEnd = 0;
 var elm$parser$Parser$Done = function (a) {
 	return {$: 1, a: a};
 };
@@ -5640,7 +5639,9 @@ var author$project$BFParser$parseTokensHelper = function (cmdTable) {
 											author$project$BFTypes$BFCommand(
 												_Utils_update(
 													token,
-													{dC: 1}))) : A2(
+													{
+														dC: elm$core$Maybe$Just(0)
+													}))) : A2(
 											author$project$BFParser$finalizeLoopCommandWithFullStack,
 											memo.v,
 											author$project$BFTypes$BFCommand(
@@ -5696,7 +5697,12 @@ var author$project$BFParser$parseTokensHelper = function (cmdTable) {
 											_List_fromArray(
 												[current, list]),
 											author$project$BFTypes$BFCommand(
-												A4(author$project$BFTypes$BFToken, 2, '(Loop wasn\'t closed)', elm$core$Maybe$Nothing, 2)));
+												A4(
+													author$project$BFTypes$BFToken,
+													2,
+													'(Loop wasn\'t closed)',
+													elm$core$Maybe$Nothing,
+													elm$core$Maybe$Just(1))));
 										var innerStackList = _n5;
 										return A2(
 											elm$core$Maybe$withDefault,
@@ -7187,16 +7193,6 @@ var author$project$Language$Ook$table = _Utils_Tuple2(
 	'Ook!');
 var author$project$Main$bfTokenTableList = _List_fromArray(
 	[author$project$Language$BF$table, author$project$Language$HogyLang$table, author$project$Language$Ook$table]);
-var author$project$BFParser$bfParseErrorToString = function (error) {
-	switch (error) {
-		case 0:
-			return elm$core$Maybe$Nothing;
-		case 1:
-			return elm$core$Maybe$Just('Loop End shouldn\'t be here');
-		default:
-			return elm$core$Maybe$Just('Loop End should be here');
-	}
-};
 var elm$core$Elm$JsArray$map = _JsArray_map;
 var elm$core$Array$map = F2(
 	function (func, _n0) {
@@ -7310,7 +7306,7 @@ var author$project$Main$viewOfBFCommand = F3(
 		if (!cmd.$) {
 			var token = cmd.a;
 			var isError = function () {
-				var _n2 = author$project$BFParser$bfParseErrorToString(token.dC);
+				var _n2 = token.dC;
 				if (!_n2.$) {
 					return true;
 				} else {
