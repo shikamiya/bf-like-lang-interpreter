@@ -1,31 +1,7 @@
-module BFRunner exposing (getTapeValue, initialBFTape, initialRunningState, runBFCommandByStep, runBFCommands)
+module BFExecutor exposing (getTapeValue, runBFCommandByStep, runBFCommands)
 
 import Array exposing (Array)
-import BFTypes exposing (BFCommand(..), BFParseError(..), BFRunningState, BFTape(..), BFTokenKind(..))
-
-
-initialRunningState : BFRunningState
-initialRunningState =
-    { commands = Array.fromList []
-    , currentIndices = []
-    , tape = initialBFTape
-    , tapePointer = 0
-    , input = ""
-    , inputPointer = 0
-    , output = []
-    , error = Nothing
-    }
-
-
-tapeSize : Int
-tapeSize =
-    30000
-
-
-initialBFTape : BFTape
-initialBFTape =
-    Array.repeat tapeSize 0
-        |> BFTape
+import BFTypes exposing (BFCommand(..), BFParseError(..), BFRunningState, BFTape(..), BFTokenKind(..), tapeSize)
 
 
 increaseTapePointer : Int -> Result String Int

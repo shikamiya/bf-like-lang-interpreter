@@ -1,9 +1,9 @@
 module Main exposing (main)
 
 import Array exposing (Array)
+import BFExecutor exposing (runBFCommandByStep, runBFCommands)
 import BFParser exposing (parseTokens)
-import BFRunner exposing (initialRunningState, runBFCommandByStep, runBFCommands)
-import BFTypes exposing (BFCommand(..), BFParseError(..), BFRunningState, BFTape(..), BFTokenKind(..), BFTokenTable)
+import BFTypes exposing (BFCommand(..), BFParseError(..), BFRunningState, BFTape(..), BFTokenKind(..), BFTokenTable, initialRunningState)
 import Bootstrap.Button as Button
 import Bootstrap.ButtonGroup as ButtonGroup
 import Bootstrap.CDN

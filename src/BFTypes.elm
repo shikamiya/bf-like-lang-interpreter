@@ -1,4 +1,4 @@
-module BFTypes exposing (BFCommand(..), BFParseError(..), BFRunningState, BFTape(..), BFToken, BFTokenKind(..), BFTokenTable, bfParseErrorToString)
+module BFTypes exposing (BFCommand(..), BFParseError(..), BFRunningState, BFTape(..), BFToken, BFTokenKind(..), BFTokenTable, bfParseErrorToString, initialBFTape, initialRunningState, tapeSize)
 
 import Array exposing (Array)
 
@@ -60,3 +60,27 @@ bfParseErrorToString error =
 
         InsufficientLoopEnd ->
             "Loop End should be here"
+
+
+initialRunningState : BFRunningState
+initialRunningState =
+    { commands = Array.fromList []
+    , currentIndices = []
+    , tape = initialBFTape
+    , tapePointer = 0
+    , input = ""
+    , inputPointer = 0
+    , output = []
+    , error = Nothing
+    }
+
+
+tapeSize : Int
+tapeSize =
+    30000
+
+
+initialBFTape : BFTape
+initialBFTape =
+    Array.repeat tapeSize 0
+        |> BFTape
