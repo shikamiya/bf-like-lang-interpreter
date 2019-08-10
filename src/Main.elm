@@ -68,7 +68,7 @@ type alias Model =
     { programContent : String
     , displayNoOpCommand : Bool
     , tokenTableStates : TokenTableDropdowns
-    , state : BFRunningState
+    , runningState : BFRunningState
     }
 
 
@@ -97,7 +97,7 @@ initialModel =
     { programContent = ""
     , displayNoOpCommand = True
     , tokenTableStates = initialTokenTableStates
-    , state = initialRunningState
+    , runningState = initialRunningState
     }
 
 
@@ -180,20 +180,20 @@ update msg model =
             let
                 commands =
                     parseTokens model.tokenTableStates.parser.tokenTable model.programContent
-                        |> Result.withDefault model.state.commands
+                        |> Result.withDefault model.runningState.commands
 
                 state =
-                    model.state
+                    model.runningState
             in
-            { model | state = { state | commands = commands } }
+            { model | runningState = { state | commands = commands } }
                 |> withCmdNone
 
         UpdateInput input ->
             let
                 state =
-                    model.state
+                    model.runningState
             in
-            { model | state = { state | input = input } }
+            { model | runningState = { state | input = input } }
                 |> withCmdNone
 
         UpdateParserTokenTable table ->
@@ -275,23 +275,23 @@ update msg model =
                 |> withCmdNone
 
         ResetRunnningState ->
-            { model | state = { initialRunningState | commands = model.state.commands, input = model.state.input } }
+            { model | runningState = { initialRunningState | commands = model.runningState.commands, input = model.runningState.input } }
                 |> withCmdNone
 
         Run ->
             let
                 state =
-                    runBFCommands { initialRunningState | commands = model.state.commands, input = model.state.input }
+                    runBFCommands { initialRunningState | commands = model.runningState.commands, input = model.runningState.input }
             in
-            { model | state = state }
+            { model | runningState = state }
                 |> withCmdNone
 
         StepRun ->
             let
                 state =
-                    runBFCommandByStep model.state
+                    runBFCommandByStep model.runningState
             in
-            { model | state = state }
+            { model | runningState = state }
                 |> withCmdNone
 
 
@@ -366,7 +366,7 @@ view model =
                             ]
                         ]
                     |> Card.block []
-                        [ viewOfBFCommands model [] model.state.commands
+                        [ viewOfBFCommands model [] model.runningState.commands
                             |> Html.p []
                             |> Block.custom
                         ]
@@ -390,7 +390,7 @@ view model =
                             Textarea.textarea
                                 [ Textarea.rows 15
                                 , Textarea.onInput UpdateInput
-                                , Textarea.value model.state.input
+                                , Textarea.value model.runningState.input
                                 ]
                         ]
                     |> Card.view
@@ -400,12 +400,12 @@ view model =
                     |> Card.header [] [ text "Output" ]
                     |> Card.block []
                         [ Html.p []
-                            [ model.state.output
+                            [ model.runningState.output
                                 |> List.reverse
                                 |> List.map String.fromChar
                                 |> String.concat
                                 |> text
-                            , Html.span [ Html.Attributes.class "text-danger" ] [ text <| Maybe.withDefault "" model.state.error ]
+                            , Html.span [ Html.Attributes.class "text-danger" ] [ text <| Maybe.withDefault "" model.runningState.error ]
                             ]
                             |> Block.custom
                         ]
@@ -431,7 +431,7 @@ viewOfBFCommand : Model -> List Int -> BFCommand -> List (Html Msg)
 viewOfBFCommand model pos cmd =
     let
         isCurrentCommand =
-            model.state.currentIndices == pos
+            model.runningState.currentIndices == pos
 
         depth =
             List.length pos - 1
