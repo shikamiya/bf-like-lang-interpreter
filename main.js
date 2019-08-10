@@ -9739,7 +9739,7 @@ var author$project$Main$viewOfMainTabItem = function (model) {
 													rundis$elm_bootstrap$Bootstrap$Form$Textarea$textarea(
 														_List_fromArray(
 															[
-																rundis$elm_bootstrap$Bootstrap$Form$Textarea$rows(15),
+																rundis$elm_bootstrap$Bootstrap$Form$Textarea$rows(5),
 																rundis$elm_bootstrap$Bootstrap$Form$Textarea$onInput(author$project$Main$UpdateInput),
 																rundis$elm_bootstrap$Bootstrap$Form$Textarea$value(model.f.dK)
 															])))

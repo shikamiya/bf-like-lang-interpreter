@@ -412,7 +412,7 @@ viewOfMainTabItem model =
                             |> Card.block []
                                 [ Block.custom <|
                                     Textarea.textarea
-                                        [ Textarea.rows 15
+                                        [ Textarea.rows 5
                                         , Textarea.onInput UpdateInput
                                         , Textarea.value model.runningState.input
                                         ]
