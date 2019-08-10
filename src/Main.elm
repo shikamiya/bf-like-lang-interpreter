@@ -57,9 +57,76 @@ main =
 subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.batch
-        [ Dropdown.subscriptions model.tokenTableStates.parser.dropdownState UpdateParserTokenTableDropDownState
-        , Dropdown.subscriptions model.tokenTableStates.display.dropdownState UpdateDisplayTokenTableDropDownState
+        [ Dropdown.subscriptions model.parserTokenTableState.dropdownState <| UpdateParserTokenTableState << UpdateTokenTableDropdownState
+        , Dropdown.subscriptions model.displayTokenTableState.dropdownState <| UpdateDisplayTokenTableState << UpdateTokenTableDropdownState
         ]
+
+
+
+-- SubModels / Update
+
+
+type alias TokenTableState =
+    { dropdownState : Dropdown.State
+    , tokenTable : BFTokenTable
+    }
+
+
+type TokenTableStateMsg
+    = UpdateTokenTableDropdownState Dropdown.State
+    | UpdateTokenTable BFTokenTable
+
+
+updateTokenTableState : TokenTableState -> TokenTableStateMsg -> TokenTableState
+updateTokenTableState tokenTableDropdown msg =
+    case msg of
+        UpdateTokenTableDropdownState state ->
+            { tokenTableDropdown | dropdownState = state }
+
+        UpdateTokenTable tokenTable ->
+            { tokenTableDropdown | tokenTable = tokenTable }
+
+
+initialTokenTableState : TokenTableState
+initialTokenTableState =
+    { dropdownState = Dropdown.initialState
+    , tokenTable = Language.BF.table
+    }
+
+
+type BFRunningStateMsg
+    = UpdateTokens (Array BFCommand)
+    | UpdateInput String
+    | ResetAll
+    | ResetRunnningState
+    | Run
+    | StepRun
+
+
+updateRunningState : BFRunningState -> BFRunningStateMsg -> BFRunningState
+updateRunningState state msg =
+    case msg of
+        UpdateTokens commands ->
+            { state | commands = commands }
+
+        UpdateInput input ->
+            { state | input = input }
+
+        ResetAll ->
+            initialRunningState
+
+        ResetRunnningState ->
+            { initialRunningState | commands = state.commands, input = state.input }
+
+        Run ->
+            let
+                initState =
+                    updateRunningState state ResetRunnningState
+            in
+            runBFCommands initState
+
+        StepRun ->
+            runBFCommandByStep state
 
 
 
@@ -70,20 +137,9 @@ type alias Model =
     { programContent : String
     , tabState : Tab.State
     , displayNoOpCommand : Bool
-    , tokenTableStates : TokenTableDropdowns
+    , parserTokenTableState : TokenTableState
+    , displayTokenTableState : TokenTableState
     , runningState : BFRunningState
-    }
-
-
-type alias TokenTableDropdowns =
-    { parser : TokenTableDropdown
-    , display : TokenTableDropdown
-    }
-
-
-type alias TokenTableDropdown =
-    { dropdownState : Dropdown.State
-    , tokenTable : BFTokenTable
     }
 
 
@@ -100,22 +156,9 @@ initialModel =
     { programContent = ""
     , tabState = Tab.initialState
     , displayNoOpCommand = True
-    , tokenTableStates = initialTokenTableStates
+    , parserTokenTableState = initialTokenTableState
+    , displayTokenTableState = initialTokenTableState
     , runningState = initialRunningState
-    }
-
-
-initialTokenTableStates : TokenTableDropdowns
-initialTokenTableStates =
-    { parser = initialTokenTableState
-    , display = initialTokenTableState
-    }
-
-
-initialTokenTableState : TokenTableDropdown
-initialTokenTableState =
-    { dropdownState = Dropdown.initialState
-    , tokenTable = Language.BF.table
     }
 
 
@@ -157,148 +200,68 @@ withCacheCmd model =
 
 
 type Msg
-    = UpdateProgramContent String
+    = ChangeProgramContent String
+    | UpdateProgramContent String
     | UpdateTabState Tab.State
-    | ParseTokens
-    | UpdateInput String
-    | UpdateParserTokenTable BFTokenTable
-    | UpdateParserTokenTableDropDownState Dropdown.State
-    | UpdateDisplayTokenTable BFTokenTable
-    | UpdateDisplayTokenTableDropDownState Dropdown.State
+    | UpdateParserTokenTableState TokenTableStateMsg
+    | UpdateDisplayTokenTableState TokenTableStateMsg
     | ChangeNoOpCommandVisibility Bool
-    | ResetAll
-    | ResetRunnningState
-    | Run
-    | StepRun
+    | ParseTokens
+    | UpdateRunningState BFRunningStateMsg
 
 
 update : Msg -> Model -> ( Model, Cmd msg )
 update msg model =
     case msg of
-        UpdateProgramContent programContent ->
-            { model | programContent = programContent }
+        ChangeProgramContent programContent ->
+            update (UpdateProgramContent programContent) model
+                |> Tuple.first
                 |> update ParseTokens
                 |> Tuple.first
+                |> withCacheCmd
+
+        UpdateProgramContent programContent ->
+            { model | programContent = programContent }
                 |> withCacheCmd
 
         UpdateTabState state ->
             { model | tabState = state }
                 |> withCmdNone
 
-        ParseTokens ->
-            let
-                commands =
-                    parseTokens model.tokenTableStates.parser.tokenTable model.programContent
-                        |> Result.withDefault model.runningState.commands
-
-                state =
-                    model.runningState
-            in
-            { model | runningState = { state | commands = commands } }
-                |> withCmdNone
-
-        UpdateInput input ->
+        UpdateParserTokenTableState tokenTableStateMsg ->
             let
                 state =
-                    model.runningState
+                    updateTokenTableState model.parserTokenTableState tokenTableStateMsg
             in
-            { model | runningState = { state | input = input } }
+            { model | parserTokenTableState = state }
                 |> withCmdNone
 
-        UpdateParserTokenTable table ->
+        UpdateDisplayTokenTableState tokenTableStateMsg ->
             let
-                oldParser =
-                    model.tokenTableStates.parser
-
-                parser =
-                    { oldParser | tokenTable = table }
-
-                oldTokenTableStates =
-                    model.tokenTableStates
-
-                tokenTableStates =
-                    { oldTokenTableStates | parser = parser }
+                state =
+                    updateTokenTableState model.displayTokenTableState tokenTableStateMsg
             in
-            { model | tokenTableStates = tokenTableStates }
-                |> update ParseTokens
-                |> Tuple.first
-                |> withCmdNone
-
-        UpdateParserTokenTableDropDownState state ->
-            let
-                oldParser =
-                    model.tokenTableStates.parser
-
-                parser =
-                    { oldParser | dropdownState = state }
-
-                oldTokenTableStates =
-                    model.tokenTableStates
-
-                tokenTableStates =
-                    { oldTokenTableStates | parser = parser }
-            in
-            { model | tokenTableStates = tokenTableStates }
-                |> withCmdNone
-
-        UpdateDisplayTokenTable table ->
-            let
-                oldDisplay =
-                    model.tokenTableStates.display
-
-                display =
-                    { oldDisplay | tokenTable = table }
-
-                oldTokenTableStates =
-                    model.tokenTableStates
-
-                tokenTableStates =
-                    { oldTokenTableStates | display = display }
-            in
-            { model | tokenTableStates = tokenTableStates }
-                |> withCmdNone
-
-        UpdateDisplayTokenTableDropDownState state ->
-            let
-                oldDisplay =
-                    model.tokenTableStates.display
-
-                display =
-                    { oldDisplay | dropdownState = state }
-
-                oldTokenTableStates =
-                    model.tokenTableStates
-
-                tokenTableStates =
-                    { oldTokenTableStates | display = display }
-            in
-            { model | tokenTableStates = tokenTableStates }
+            { model | displayTokenTableState = state }
                 |> withCmdNone
 
         ChangeNoOpCommandVisibility visibility ->
             { model | displayNoOpCommand = visibility }
                 |> withCmdNone
 
-        ResetAll ->
-            initialModel
-                |> withCmdNone
-
-        ResetRunnningState ->
-            { model | runningState = { initialRunningState | commands = model.runningState.commands, input = model.runningState.input } }
-                |> withCmdNone
-
-        Run ->
+        ParseTokens ->
             let
-                state =
-                    runBFCommands { initialRunningState | commands = model.runningState.commands, input = model.runningState.input }
+                commands =
+                    parseTokens model.parserTokenTableState.tokenTable model.programContent
+                        |> Result.withDefault model.runningState.commands
             in
-            { model | runningState = state }
+            update (UpdateRunningState <| UpdateTokens commands) model
+                |> Tuple.first
                 |> withCmdNone
 
-        StepRun ->
+        UpdateRunningState runningStateMsg ->
             let
                 state =
-                    runBFCommandByStep model.runningState
+                    updateRunningState model.runningState runningStateMsg
             in
             { model | runningState = state }
                 |> withCmdNone
@@ -339,20 +302,20 @@ viewOfMainTabItem model =
                         [ Card.config []
                             |> Card.header []
                                 [ Dropdown.dropdown
-                                    model.tokenTableStates.parser.dropdownState
+                                    model.parserTokenTableState.dropdownState
                                     { options = []
-                                    , toggleMsg = UpdateParserTokenTableDropDownState
+                                    , toggleMsg = UpdateParserTokenTableState << UpdateTokenTableDropdownState
                                     , toggleButton =
-                                        Dropdown.toggle [ Button.primary ] [ text <| Tuple.second model.tokenTableStates.parser.tokenTable ]
+                                        Dropdown.toggle [ Button.primary ] [ text <| Tuple.second model.parserTokenTableState.tokenTable ]
                                     , items =
-                                        List.map (viewOfBFTokenTableItem UpdateParserTokenTable) bfTokenTableList
+                                        List.map (viewOfBFTokenTableItem <| UpdateParserTokenTableState << UpdateTokenTable) bfTokenTableList
                                     }
                                 ]
                             |> Card.block []
                                 [ Block.custom <|
                                     Textarea.textarea
                                         [ Textarea.rows 15
-                                        , Textarea.onInput UpdateProgramContent
+                                        , Textarea.onInput ChangeProgramContent
                                         , Textarea.value model.programContent
                                         ]
                                 ]
@@ -365,13 +328,13 @@ viewOfMainTabItem model =
                                     [ Grid.col []
                                         [ text "Parsed commands by: "
                                         , Dropdown.dropdown
-                                            model.tokenTableStates.display.dropdownState
+                                            model.displayTokenTableState.dropdownState
                                             { options = []
-                                            , toggleMsg = UpdateDisplayTokenTableDropDownState
+                                            , toggleMsg = UpdateDisplayTokenTableState << UpdateTokenTableDropdownState
                                             , toggleButton =
-                                                Dropdown.toggle [ Button.primary ] [ text <| Tuple.second model.tokenTableStates.display.tokenTable ]
+                                                Dropdown.toggle [ Button.primary ] [ text <| Tuple.second model.displayTokenTableState.tokenTable ]
                                             , items =
-                                                List.map (viewOfBFTokenTableItem UpdateDisplayTokenTable) bfTokenTableList
+                                                List.map (viewOfBFTokenTableItem <| UpdateDisplayTokenTableState << UpdateTokenTable) bfTokenTableList
                                             }
                                         ]
                                     , Grid.col []
@@ -399,10 +362,10 @@ viewOfMainTabItem model =
                     ]
                 , Grid.row [ Row.attrs [ Html.Attributes.class "my-3" ] ]
                     [ Grid.col []
-                        [ Button.button [ Button.onClick Run ] [ text "RunFromStart" ]
-                        , Button.button [ Button.onClick StepRun ] [ text "StepRun" ]
-                        , Button.button [ Button.onClick ResetAll ] [ text "ResetAll" ]
-                        , Button.button [ Button.onClick ResetRunnningState ] [ text "ResetStepRunPosition" ]
+                        [ Button.button [ Button.onClick (UpdateRunningState Run) ] [ text "RunFromStart" ]
+                        , Button.button [ Button.onClick (UpdateRunningState StepRun) ] [ text "StepRun" ]
+                        , Button.button [ Button.onClick (UpdateRunningState ResetAll) ] [ text "ResetAll" ]
+                        , Button.button [ Button.onClick (UpdateRunningState ResetRunnningState) ] [ text "ResetStepRunPosition" ]
                         ]
                     ]
                 , Grid.row []
@@ -413,7 +376,7 @@ viewOfMainTabItem model =
                                 [ Block.custom <|
                                     Textarea.textarea
                                         [ Textarea.rows 5
-                                        , Textarea.onInput UpdateInput
+                                        , Textarea.onInput (UpdateRunningState << UpdateInput)
                                         , Textarea.value model.runningState.input
                                         ]
                                 ]
@@ -453,7 +416,7 @@ viewOfDebugTabItem _ =
         , link = Tab.link [] [ text "Debug" ]
         , pane =
             Tab.pane [ Spacing.mt3 ]
-                [ Button.button [ Button.onClick <| UpdateProgramContent "++++++++++[>+++++++>++++++++++>+++>+<<<<-]>++.>+.+++++++..+++.>++.<<+++++++++++++++.>.+++.------.--------.>+.>." ] [ text "BF Hello world program" ] ]
+                [ Button.button [ Button.onClick <| ChangeProgramContent "++++++++++[>+++++++>++++++++++>+++>+<<<<-]>++.>+.+++++++..+++.>++.<<+++++++++++++++.>.+++.------.--------.>+.>." ] [ text "BF Hello world program" ] ]
         }
 
 
@@ -519,7 +482,7 @@ viewOfBFCommand model pos cmd =
                 _ ->
                     let
                         displayValue =
-                            List.filter (\table -> token.kind == Tuple.first table) (Tuple.first model.tokenTableStates.display.tokenTable)
+                            List.filter (\table -> token.kind == Tuple.first table) (Tuple.first model.displayTokenTableState.tokenTable)
                                 |> List.head
                                 |> Maybe.withDefault ( token.kind, token.value )
                                 |> Tuple.second
