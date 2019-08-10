@@ -14,6 +14,8 @@ import Bootstrap.Form.Textarea as Textarea
 import Bootstrap.Grid as Grid
 import Bootstrap.Grid.Col as Col
 import Bootstrap.Grid.Row as Row
+import Bootstrap.Tab as Tab
+import Bootstrap.Utilities.Spacing as Spacing
 import Browser
 import Cacher exposing (cache)
 import Html exposing (Html, text)
@@ -66,6 +68,7 @@ subscriptions model =
 
 type alias Model =
     { programContent : String
+    , tabState : Tab.State
     , displayNoOpCommand : Bool
     , tokenTableStates : TokenTableDropdowns
     , runningState : BFRunningState
@@ -95,6 +98,7 @@ init flags =
 initialModel : Model
 initialModel =
     { programContent = ""
+    , tabState = Tab.initialState
     , displayNoOpCommand = True
     , tokenTableStates = initialTokenTableStates
     , runningState = initialRunningState
@@ -154,6 +158,7 @@ withCacheCmd model =
 
 type Msg
     = UpdateProgramContent String
+    | UpdateTabState Tab.State
     | ParseTokens
     | UpdateInput String
     | UpdateParserTokenTable BFTokenTable
@@ -175,6 +180,10 @@ update msg model =
                 |> update ParseTokens
                 |> Tuple.first
                 |> withCacheCmd
+
+        UpdateTabState state ->
+            { model | tabState = state }
+                |> withCmdNone
 
         ParseTokens ->
             let
@@ -306,113 +315,146 @@ view model =
         , Grid.row []
             [ Grid.col [ Col.sm ]
                 [ Html.h1 []
-                    [ text "BF/Ook! like language interpreter/transpiler"
-                    ]
+                    [ text "BF/Ook! like language interpreter/transpiler" ]
                 ]
             ]
-        , Grid.row []
-            [ Grid.col [ Col.lg6 ]
-                [ Card.config []
-                    |> Card.header []
-                        [ Dropdown.dropdown
-                            model.tokenTableStates.parser.dropdownState
-                            { options = []
-                            , toggleMsg = UpdateParserTokenTableDropDownState
-                            , toggleButton =
-                                Dropdown.toggle [ Button.primary ] [ text <| Tuple.second model.tokenTableStates.parser.tokenTable ]
-                            , items =
-                                List.map (viewOfBFTokenTableItem UpdateParserTokenTable) bfTokenTableList
-                            }
-                        ]
-                    |> Card.block []
-                        [ Block.custom <|
-                            Textarea.textarea
-                                [ Textarea.rows 15
-                                , Textarea.onInput UpdateProgramContent
-                                , Textarea.value model.programContent
-                                ]
-                        ]
-                    |> Card.view
+        , Tab.config UpdateTabState
+            |> Tab.items
+                [ viewOfMainTabItem model
+                , viewOfDebugTabItem model
                 ]
-            , Grid.col [ Col.lg6 ]
-                [ Card.config [ Card.attrs [ Html.Attributes.class "h-100" ] ]
-                    |> Card.header []
-                        [ Grid.row []
-                            [ Grid.col []
-                                [ text "Parsed commands by: "
-                                , Dropdown.dropdown
-                                    model.tokenTableStates.display.dropdownState
+            |> Tab.view model.tabState
+        ]
+
+
+viewOfMainTabItem : Model -> Tab.Item Msg
+viewOfMainTabItem model =
+    Tab.item
+        { id = "mainTabItem"
+        , link = Tab.link [] [ text "Executor" ]
+        , pane =
+            Tab.pane [ Spacing.mt3 ]
+                [ Grid.row []
+                    [ Grid.col [ Col.lg6 ]
+                        [ Card.config []
+                            |> Card.header []
+                                [ Dropdown.dropdown
+                                    model.tokenTableStates.parser.dropdownState
                                     { options = []
-                                    , toggleMsg = UpdateDisplayTokenTableDropDownState
+                                    , toggleMsg = UpdateParserTokenTableDropDownState
                                     , toggleButton =
-                                        Dropdown.toggle [ Button.primary ] [ text <| Tuple.second model.tokenTableStates.display.tokenTable ]
+                                        Dropdown.toggle [ Button.primary ] [ text <| Tuple.second model.tokenTableStates.parser.tokenTable ]
                                     , items =
-                                        List.map (viewOfBFTokenTableItem UpdateDisplayTokenTable) bfTokenTableList
+                                        List.map (viewOfBFTokenTableItem UpdateParserTokenTable) bfTokenTableList
                                     }
                                 ]
-                            , Grid.col []
-                                [ text " Comments: "
-                                , ButtonGroup.radioButtonGroup [ ButtonGroup.small ]
-                                    [ ButtonGroup.radioButton
-                                        (model.displayNoOpCommand == True)
-                                        [ Button.primary, Button.onClick <| ChangeNoOpCommandVisibility True ]
-                                        [ text "Show" ]
-                                    , ButtonGroup.radioButton
-                                        (model.displayNoOpCommand == False)
-                                        [ Button.primary, Button.onClick <| ChangeNoOpCommandVisibility False ]
-                                        [ text "Hide" ]
+                            |> Card.block []
+                                [ Block.custom <|
+                                    Textarea.textarea
+                                        [ Textarea.rows 15
+                                        , Textarea.onInput UpdateProgramContent
+                                        , Textarea.value model.programContent
+                                        ]
+                                ]
+                            |> Card.view
+                        ]
+                    , Grid.col [ Col.lg6 ]
+                        [ Card.config [ Card.attrs [ Html.Attributes.class "h-100" ] ]
+                            |> Card.header []
+                                [ Grid.row []
+                                    [ Grid.col []
+                                        [ text "Parsed commands by: "
+                                        , Dropdown.dropdown
+                                            model.tokenTableStates.display.dropdownState
+                                            { options = []
+                                            , toggleMsg = UpdateDisplayTokenTableDropDownState
+                                            , toggleButton =
+                                                Dropdown.toggle [ Button.primary ] [ text <| Tuple.second model.tokenTableStates.display.tokenTable ]
+                                            , items =
+                                                List.map (viewOfBFTokenTableItem UpdateDisplayTokenTable) bfTokenTableList
+                                            }
+                                        ]
+                                    , Grid.col []
+                                        [ text " Comments: "
+                                        , ButtonGroup.radioButtonGroup [ ButtonGroup.small ]
+                                            [ ButtonGroup.radioButton
+                                                (model.displayNoOpCommand == True)
+                                                [ Button.primary, Button.onClick <| ChangeNoOpCommandVisibility True ]
+                                                [ text "Show" ]
+                                            , ButtonGroup.radioButton
+                                                (model.displayNoOpCommand == False)
+                                                [ Button.primary, Button.onClick <| ChangeNoOpCommandVisibility False ]
+                                                [ text "Hide" ]
+                                            ]
+                                        ]
                                     ]
                                 ]
-                            ]
-                        ]
-                    |> Card.block []
-                        [ viewOfBFCommands model [] model.runningState.commands
-                            |> Html.p []
-                            |> Block.custom
-                        ]
-                    |> Card.view
-                ]
-            ]
-        , Grid.row [ Row.attrs [ Html.Attributes.class "my-3" ] ]
-            [ Grid.col []
-                [ Button.button [ Button.onClick Run ] [ text "RunFromStart" ]
-                , Button.button [ Button.onClick StepRun ] [ text "StepRun" ]
-                , Button.button [ Button.onClick ResetAll ] [ text "ResetAll" ]
-                , Button.button [ Button.onClick ResetRunnningState ] [ text "ResetStepRunPosition" ]
-                ]
-            ]
-        , Grid.row []
-            [ Grid.col [ Col.lg6 ]
-                [ Card.config []
-                    |> Card.header [] [ text "Input" ]
-                    |> Card.block []
-                        [ Block.custom <|
-                            Textarea.textarea
-                                [ Textarea.rows 15
-                                , Textarea.onInput UpdateInput
-                                , Textarea.value model.runningState.input
+                            |> Card.block []
+                                [ viewOfBFCommands model [] model.runningState.commands
+                                    |> Html.p []
+                                    |> Block.custom
                                 ]
+                            |> Card.view
                         ]
-                    |> Card.view
-                ]
-            , Grid.col [ Col.lg6 ]
-                [ Card.config []
-                    |> Card.header [] [ text "Output" ]
-                    |> Card.block []
-                        [ Html.p []
-                            [ model.runningState.output
-                                |> List.reverse
-                                |> List.map String.fromChar
-                                |> String.concat
-                                |> text
-                            , Html.span [ Html.Attributes.class "text-danger" ] [ text <| Maybe.withDefault "" model.runningState.error ]
-                            ]
-                            |> Block.custom
+                    ]
+                , Grid.row [ Row.attrs [ Html.Attributes.class "my-3" ] ]
+                    [ Grid.col []
+                        [ Button.button [ Button.onClick Run ] [ text "RunFromStart" ]
+                        , Button.button [ Button.onClick StepRun ] [ text "StepRun" ]
+                        , Button.button [ Button.onClick ResetAll ] [ text "ResetAll" ]
+                        , Button.button [ Button.onClick ResetRunnningState ] [ text "ResetStepRunPosition" ]
                         ]
-                    |> Card.view
+                    ]
+                , Grid.row []
+                    [ Grid.col [ Col.lg6 ]
+                        [ Card.config []
+                            |> Card.header [] [ text "Input" ]
+                            |> Card.block []
+                                [ Block.custom <|
+                                    Textarea.textarea
+                                        [ Textarea.rows 15
+                                        , Textarea.onInput UpdateInput
+                                        , Textarea.value model.runningState.input
+                                        ]
+                                ]
+                            |> Card.view
+                        ]
+                    , Grid.col [ Col.lg6 ]
+                        [ Card.config []
+                            |> Card.header [] [ text "Output" ]
+                            |> Card.block []
+                                [ Html.p []
+                                    (model.runningState.output
+                                        |> List.reverse
+                                        |> List.map String.fromChar
+                                        |> List.map
+                                            (\str ->
+                                                if str == "\n" then
+                                                    Html.br [] []
+
+                                                else
+                                                    text str
+                                            )
+                                        |> (\x -> List.append x [ Html.span [ Html.Attributes.class "text-danger" ] [ text <| Maybe.withDefault "" model.runningState.error ] ])
+                                    )
+                                    |> Block.custom
+                                ]
+                            |> Card.view
+                        ]
+                    ]
                 ]
-            ]
-        ]
+        }
+
+
+viewOfDebugTabItem : Model -> Tab.Item Msg
+viewOfDebugTabItem _ =
+    Tab.item
+        { id = "debugTabItem"
+        , link = Tab.link [] [ text "Debug" ]
+        , pane =
+            Tab.pane [ Spacing.mt3 ]
+                [ Button.button [ Button.onClick <| UpdateProgramContent "++++++++++[>+++++++>++++++++++>+++>+<<<<-]>++.>+.+++++++..+++.>++.<<+++++++++++++++.>.+++.------.--------.>+.>." ] [ text "BF Hello world program" ] ]
+        }
 
 
 viewOfBFTokenTableItem : (BFTokenTable -> Msg) -> BFTokenTable -> Dropdown.DropdownItem Msg
