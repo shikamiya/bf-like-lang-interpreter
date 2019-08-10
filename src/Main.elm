@@ -455,14 +455,14 @@ viewOfBFCommand model pos cmd =
             in
             case token.kind of
                 NoOp ->
-                    if token.value == "\n" then
+                    let
+                        visible =
+                            isError || model.displayNoOpCommand
+                    in
+                    if token.value == "\n" && visible then
                         brWithSpacings depth
 
                     else
-                        let
-                            visible =
-                                isError || model.displayNoOpCommand
-                        in
                         Html.span
                             [ Html.Attributes.classList
                                 [ ( "text-muted", not isError )

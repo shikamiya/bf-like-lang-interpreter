@@ -7278,29 +7278,25 @@ var author$project$Main$viewOfBFCommand = F3(
 			}();
 			var _n1 = token.cT;
 			if (!_n1) {
-				if (token.dT === '\n') {
-					return brWithSpacings(depth);
-				} else {
-					var visible = isError || model.W;
-					return elm$core$List$singleton(
-						A2(
-							elm$html$Html$span,
-							_List_fromArray(
-								[
-									elm$html$Html$Attributes$classList(
-									_List_fromArray(
-										[
-											_Utils_Tuple2('text-muted', !isError),
-											_Utils_Tuple2('text-danger', isError),
-											_Utils_Tuple2('font-weight-bold', isError),
-											_Utils_Tuple2('d-none', !visible)
-										]))
-								]),
-							_List_fromArray(
-								[
-									elm$html$Html$text(token.dT)
-								])));
-				}
+				var visible = isError || model.W;
+				return ((token.dT === '\n') && visible) ? brWithSpacings(depth) : elm$core$List$singleton(
+					A2(
+						elm$html$Html$span,
+						_List_fromArray(
+							[
+								elm$html$Html$Attributes$classList(
+								_List_fromArray(
+									[
+										_Utils_Tuple2('text-muted', !isError),
+										_Utils_Tuple2('text-danger', isError),
+										_Utils_Tuple2('font-weight-bold', isError),
+										_Utils_Tuple2('d-none', !visible)
+									]))
+							]),
+						_List_fromArray(
+							[
+								elm$html$Html$text(token.dT)
+							])));
 			} else {
 				var displayValue = A2(
 					elm$core$Maybe$withDefault,
