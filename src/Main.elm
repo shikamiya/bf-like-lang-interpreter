@@ -14,6 +14,7 @@ import Bootstrap.Form.Textarea as Textarea
 import Bootstrap.Grid as Grid
 import Bootstrap.Grid.Col as Col
 import Bootstrap.Grid.Row as Row
+import Bootstrap.Popover as Popover
 import Bootstrap.Tab as Tab
 import Bootstrap.Utilities.Spacing as Spacing
 import Browser
@@ -26,6 +27,7 @@ import Json.Encode
 import Language.BF
 import Language.HogyLang
 import Language.Ook
+import Task
 
 
 
@@ -97,6 +99,7 @@ initialTokenTableState =
 type BFRunningStateMsg
     = UpdateTokens (Array BFCommand)
     | UpdateInput String
+    | UpdatePopoverIndices (List Int)
     | ResetAll
     | ResetRunnningState
     | Run
@@ -111,6 +114,9 @@ updateRunningState state msg =
 
         UpdateInput input ->
             { state | input = input }
+
+        UpdatePopoverIndices pos ->
+            { state | popoverIndices = pos }
 
         ResetAll ->
             initialRunningState
@@ -137,6 +143,7 @@ type alias Model =
     { programContent : String
     , tabState : Tab.State
     , displayNoOpCommand : Bool
+    , popoverState : Popover.State
     , parserTokenTableState : TokenTableState
     , displayTokenTableState : TokenTableState
     , runningState : BFRunningState
@@ -156,6 +163,7 @@ initialModel =
     { programContent = ""
     , tabState = Tab.initialState
     , displayNoOpCommand = True
+    , popoverState = Popover.initialState
     , parserTokenTableState = initialTokenTableState
     , displayTokenTableState = initialTokenTableState
     , runningState = initialRunningState
@@ -203,6 +211,8 @@ type Msg
     = ChangeProgramContent String
     | UpdateProgramContent String
     | UpdateTabState Tab.State
+    | UpdatePopoverState Popover.State
+    | ChangePopoverState (List Int) Popover.State
     | UpdateParserTokenTableState TokenTableStateMsg
     | UpdateDisplayTokenTableState TokenTableStateMsg
     | ChangeNoOpCommandVisibility Bool
@@ -210,7 +220,7 @@ type Msg
     | UpdateRunningState BFRunningStateMsg
 
 
-update : Msg -> Model -> ( Model, Cmd msg )
+update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         ChangeProgramContent programContent ->
@@ -227,6 +237,13 @@ update msg model =
         UpdateTabState state ->
             { model | tabState = state }
                 |> withCmdNone
+
+        UpdatePopoverState state ->
+            { model | popoverState = state }
+                |> withCmdNone
+
+        ChangePopoverState pos state ->
+            ( update (UpdateRunningState <| UpdatePopoverIndices pos) model |> Tuple.first, Cmd.batch [ Task.perform (always (UpdatePopoverState state)) (Task.succeed ()) ] )
 
         UpdateParserTokenTableState tokenTableStateMsg ->
             let
@@ -438,6 +455,9 @@ viewOfBFCommand model pos cmd =
         isCurrentCommand =
             model.runningState.currentIndices == pos
 
+        isCurrentPopoverCommand =
+            model.runningState.popoverIndices == pos
+
         depth =
             List.length pos - 1
 
@@ -487,15 +507,30 @@ viewOfBFCommand model pos cmd =
                                 |> Maybe.withDefault ( token.kind, token.value )
                                 |> Tuple.second
                     in
-                    Html.span
-                        [ Html.Attributes.classList
-                            [ ( "text-dark", not isCurrentCommand && not isError )
-                            , ( "text-success", isCurrentCommand )
-                            , ( "text-danger", isError )
-                            , ( "font-weight-bold", True )
-                            ]
-                        ]
-                        [ text displayValue ]
+                    Html.div [ Html.Attributes.classList [ ( "my-hidden-popover", not isCurrentPopoverCommand ), ( "d-inline-block", True ) ] ]
+                        (Popover.config
+                            (Html.span
+                                (Html.Attributes.classList
+                                    [ ( "text-dark", not isCurrentCommand && not isError )
+                                    , ( "text-success", isCurrentCommand )
+                                    , ( "text-danger", isError )
+                                    , ( "font-weight-bold", True )
+                                    ]
+                                    :: Popover.onClick model.popoverState (ChangePopoverState pos)
+                                )
+                                [ text displayValue ]
+                            )
+                            |> Popover.titleH4 [] [ text "Command Information" ]
+                            |> Popover.content []
+                                [ text "Value: "
+                                , text token.value
+                                , Html.br [] []
+                                , text "Position: "
+                                , text (List.reverse pos |> List.map String.fromInt |> String.join ", ")
+                                ]
+                            |> Popover.view model.popoverState
+                            |> List.singleton
+                        )
                         |> List.singleton
 
         BFLoopFunc commands ->
