@@ -70,6 +70,34 @@ subscriptions model =
 -- SubModels / Update
 
 
+type alias CommandPopoverState =
+    { popoverState : Popover.State
+    , popoverIndices : List Int
+    }
+
+
+type CommandPopoverStateMsg
+    = UpdateCommandPopoversState Popover.State
+    | UpdateCommandPopoverIndices (List Int)
+
+
+updateCommandPopoverState : CommandPopoverStateMsg -> CommandPopoverState -> CommandPopoverState
+updateCommandPopoverState msg popoverState =
+    case msg of
+        UpdateCommandPopoversState state ->
+            { popoverState | popoverState = state }
+
+        UpdateCommandPopoverIndices pos ->
+            { popoverState | popoverIndices = pos }
+
+
+initialCommandPopoverState : CommandPopoverState
+initialCommandPopoverState =
+    { popoverState = Popover.initialState
+    , popoverIndices = []
+    }
+
+
 type alias TokenTableState =
     { dropdownState : Dropdown.State
     , tokenTable : BFTokenTable
@@ -101,7 +129,6 @@ initialTokenTableState =
 type BFRunningStateMsg
     = UpdateTokens (Array BFCommand)
     | UpdateInput String
-    | UpdatePopoverIndices (List Int)
     | ChangeCurrentTapePage
     | UpdateCurrentTapePage Int
     | ResetAll
@@ -118,9 +145,6 @@ updateRunningState msg state =
 
         UpdateInput input ->
             { state | input = input }
-
-        UpdatePopoverIndices pos ->
-            { state | popoverIndices = pos }
 
         ChangeCurrentTapePage ->
             let
@@ -162,7 +186,7 @@ type alias Model =
     { programContent : String
     , tabState : Tab.State
     , displayNoOpCommand : Bool
-    , popoverState : Popover.State
+    , commandPopoverState : CommandPopoverState
     , showBFTapeAs : ShowBFTapeAs
     , parserTokenTableState : TokenTableState
     , displayTokenTableState : TokenTableState
@@ -189,7 +213,7 @@ initialModel =
     { programContent = ""
     , tabState = Tab.initialState
     , displayNoOpCommand = True
-    , popoverState = Popover.initialState
+    , commandPopoverState = initialCommandPopoverState
     , showBFTapeAs = ShowBFTapeAsInt
     , parserTokenTableState = initialTokenTableState
     , displayTokenTableState = initialTokenTableState
@@ -239,9 +263,9 @@ type Msg
     | UpdateProgramContent String
     | UpdateTabState Tab.State
     | ChangeNoOpCommandVisibility Bool
-    | UpdatePopoverState Popover.State
-    | ChangePopoverState (List Int) Popover.State
     | UpdateHowShowBFTapeAs ShowBFTapeAs
+    | UpdateCommandPopoverState CommandPopoverStateMsg
+    | ChangeCommandPopoverState (List Int) Popover.State
     | UpdateParserTokenTableState TokenTableStateMsg
     | UpdateDisplayTokenTableState TokenTableStateMsg
     | ParseTokens
@@ -270,19 +294,23 @@ update msg model =
             { model | displayNoOpCommand = visibility }
                 |> withCmdNone
 
-        UpdatePopoverState state ->
-            { model | popoverState = state }
-                |> withCmdNone
-
-        ChangePopoverState pos state ->
-            update (UpdateRunningState <| UpdatePopoverIndices pos) model
-                |> Tuple.first
-                |> update (UpdatePopoverState state)
-                |> Tuple.first
-                |> withCmdNone
-
         UpdateHowShowBFTapeAs state ->
             { model | showBFTapeAs = state }
+                |> withCmdNone
+
+        UpdateCommandPopoverState popoverStateMsg ->
+            let
+                state =
+                    updateCommandPopoverState popoverStateMsg model.commandPopoverState
+            in
+            { model | commandPopoverState = state }
+                |> withCmdNone
+
+        ChangeCommandPopoverState pos state ->
+            update (UpdateCommandPopoverState <| UpdateCommandPopoverIndices pos) model
+                |> Tuple.first
+                |> update (UpdateCommandPopoverState <| UpdateCommandPopoversState state)
+                |> Tuple.first
                 |> withCmdNone
 
         UpdateParserTokenTableState tokenTableStateMsg ->
@@ -659,7 +687,7 @@ viewOfBFCommand model pos cmd =
             model.runningState.currentIndices == pos
 
         isCurrentPopoverCommand =
-            model.runningState.popoverIndices == pos
+            model.commandPopoverState.popoverIndices == pos
 
         depth =
             List.length pos - 1
@@ -700,11 +728,11 @@ viewOfBFCommand model pos cmd =
                                         , ( "font-weight-bold", isError )
                                         , ( "d-none", not visible )
                                         ]
-                                        :: Popover.onClick model.popoverState (ChangePopoverState pos)
+                                        :: Popover.onClick model.commandPopoverState.popoverState (ChangeCommandPopoverState pos)
                                     )
                                     [ text token.value ]
                                 )
-                                |> commandPopoverView token model.popoverState pos
+                                |> commandPopoverView token model.commandPopoverState.popoverState pos
                             )
                             |> List.singleton
 
@@ -725,11 +753,11 @@ viewOfBFCommand model pos cmd =
                                     , ( "text-danger", isError )
                                     , ( "font-weight-bold", True )
                                     ]
-                                    :: Popover.onClick model.popoverState (ChangePopoverState pos)
+                                    :: Popover.onClick model.commandPopoverState.popoverState (ChangeCommandPopoverState pos)
                                 )
                                 [ text displayValue ]
                             )
-                            |> commandPopoverView token model.popoverState pos
+                            |> commandPopoverView token model.commandPopoverState.popoverState pos
                         )
                         |> List.singleton
 

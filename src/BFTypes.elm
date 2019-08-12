@@ -39,7 +39,6 @@ type BFParseError
 type alias BFRunningState =
     { commands : Array BFCommand
     , currentIndices : List Int
-    , popoverIndices : List Int
     , tape : BFTape
     , tapePointer : Int
     , currentTapePage : Int
@@ -68,7 +67,6 @@ initialRunningState : BFRunningState
 initialRunningState =
     { commands = Array.fromList []
     , currentIndices = []
-    , popoverIndices = []
     , tape = initialBFTape
     , tapePointer = 0
     , currentTapePage = 0
