@@ -6363,9 +6363,12 @@ var author$project$Main$update = F2(
 				var tokenTableStateMsg = msg.a;
 				var state = A2(author$project$Main$updateTokenTableState, model.C, tokenTableStateMsg);
 				return author$project$Main$withCmdNone(
-					_Utils_update(
-						model,
-						{C: state}));
+					A2(
+						author$project$Main$update,
+						author$project$Main$ParseTokens,
+						_Utils_update(
+							model,
+							{C: state})).a);
 			case 6:
 				var tokenTableStateMsg = msg.a;
 				var state = A2(author$project$Main$updateTokenTableState, model.z, tokenTableStateMsg);

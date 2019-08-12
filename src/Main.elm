@@ -251,6 +251,8 @@ update msg model =
                     updateTokenTableState model.parserTokenTableState tokenTableStateMsg
             in
             { model | parserTokenTableState = state }
+                |> update ParseTokens
+                |> Tuple.first
                 |> withCmdNone
 
         UpdateDisplayTokenTableState tokenTableStateMsg ->
