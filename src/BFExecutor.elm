@@ -1,7 +1,7 @@
-module BFExecutor exposing (getTapeValue, runBFCommandByStep, runBFCommands)
+module BFExecutor exposing (getMaybeTapeValue, getTapeValue, runBFCommandByStep, runBFCommands)
 
 import Array exposing (Array)
-import BFTypes exposing (BFCommand(..), BFParseError(..), BFRunningState, BFTape(..), BFTokenKind(..), tapeSize)
+import BFTypes exposing (BFCommand(..), BFParseError(..), BFRunningState, BFTape(..), BFTokenKind(..), extractBFTape, tapeSize)
 
 
 increaseTapePointer : Int -> Result String Int
@@ -36,26 +36,26 @@ decreaseTapeValue tape pos =
         |> setTapeValue tape pos
 
 
+getMaybeTapeValue : BFTape -> Int -> Maybe Int
+getMaybeTapeValue tape pos =
+    extractBFTape tape
+        |> Array.get pos
+
+
 getTapeValue : BFTape -> Int -> Int
 getTapeValue tape pos =
-    let
-        (BFTape tapeArray) =
-            tape
-    in
-    Array.get pos tapeArray
+    getMaybeTapeValue tape pos
         |> Maybe.withDefault 0
 
 
 setTapeValue : BFTape -> Int -> Int -> BFTape
 setTapeValue tape pos value =
     let
-        (BFTape tapeArray) =
-            tape
-
         modValue =
             modBy 256 value
     in
-    Array.set pos modValue tapeArray
+    extractBFTape tape
+        |> Array.set pos modValue
         |> BFTape
 
 

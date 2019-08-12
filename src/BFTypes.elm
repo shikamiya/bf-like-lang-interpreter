@@ -1,4 +1,4 @@
-module BFTypes exposing (BFCommand(..), BFParseError(..), BFRunningState, BFTape(..), BFToken, BFTokenKind(..), BFTokenTable, bfParseErrorToString, initialBFTape, initialRunningState, tapeSize)
+module BFTypes exposing (BFCommand(..), BFParseError(..), BFRunningState, BFTape(..), BFToken, BFTokenKind(..), BFTokenTable, bfParseErrorToString, extractBFTape, initialBFTape, initialRunningState, tapePages, tapeSize)
 
 import Array exposing (Array)
 
@@ -42,6 +42,7 @@ type alias BFRunningState =
     , popoverIndices : List Int
     , tape : BFTape
     , tapePointer : Int
+    , currentTapePage : Int
     , input : String
     , inputPointer : Int
     , output : List Char
@@ -70,6 +71,7 @@ initialRunningState =
     , popoverIndices = []
     , tape = initialBFTape
     , tapePointer = 0
+    , currentTapePage = 0
     , input = ""
     , inputPointer = 0
     , output = []
@@ -79,10 +81,24 @@ initialRunningState =
 
 tapeSize : Int
 tapeSize =
-    30000
+    16 * 16 * tapePages
+
+
+tapePages : Int
+tapePages =
+    128
 
 
 initialBFTape : BFTape
 initialBFTape =
     Array.repeat tapeSize 0
         |> BFTape
+
+
+extractBFTape : BFTape -> Array Int
+extractBFTape tape =
+    let
+        (BFTape tapeArray) =
+            tape
+    in
+    tapeArray
