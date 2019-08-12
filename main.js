@@ -7443,7 +7443,7 @@ var author$project$Main$viewOfDebugTabItem = function (_n0) {
 							]),
 						_List_fromArray(
 							[
-								elm$html$Html$text('BF Hello world program')
+								elm$html$Html$text('Set BF Hello world program')
 							]))
 					]))
 		});
@@ -10979,7 +10979,7 @@ var rundis$elm_bootstrap$Bootstrap$Grid$row = F2(
 			A2(elm$core$List$map, rundis$elm_bootstrap$Bootstrap$Grid$renderCol, cols));
 	});
 var rundis$elm_bootstrap$Bootstrap$General$Internal$LG = 3;
-var rundis$elm_bootstrap$Bootstrap$Grid$Internal$Col6 = 6;
+var rundis$elm_bootstrap$Bootstrap$Grid$Internal$Col3 = 3;
 var rundis$elm_bootstrap$Bootstrap$Grid$Internal$ColWidth = function (a) {
 	return {$: 0, a: a};
 };
@@ -10988,6 +10988,8 @@ var rundis$elm_bootstrap$Bootstrap$Grid$Internal$width = F2(
 		return rundis$elm_bootstrap$Bootstrap$Grid$Internal$ColWidth(
 			A2(rundis$elm_bootstrap$Bootstrap$Grid$Internal$Width, size, count));
 	});
+var rundis$elm_bootstrap$Bootstrap$Grid$Col$lg3 = A2(rundis$elm_bootstrap$Bootstrap$Grid$Internal$width, 3, 3);
+var rundis$elm_bootstrap$Bootstrap$Grid$Internal$Col6 = 6;
 var rundis$elm_bootstrap$Bootstrap$Grid$Col$lg6 = A2(rundis$elm_bootstrap$Bootstrap$Grid$Internal$width, 3, 6);
 var rundis$elm_bootstrap$Bootstrap$Grid$Internal$Col2 = 2;
 var rundis$elm_bootstrap$Bootstrap$Grid$Col$sm2 = A2(rundis$elm_bootstrap$Bootstrap$Grid$Internal$width, 1, 2);
@@ -11406,7 +11408,7 @@ var author$project$Main$viewOfMainTabItem = function (model) {
 																A2(
 																rundis$elm_bootstrap$Bootstrap$Grid$col,
 																_List_fromArray(
-																	[rundis$elm_bootstrap$Bootstrap$Grid$Col$sm2]),
+																	[rundis$elm_bootstrap$Bootstrap$Grid$Col$sm2, rundis$elm_bootstrap$Bootstrap$Grid$Col$lg3]),
 																_List_fromArray(
 																	[
 																		elm$html$Html$text('Tape Status')
@@ -11468,7 +11470,7 @@ var author$project$Main$viewOfMainTabItem = function (model) {
 																A2(
 																rundis$elm_bootstrap$Bootstrap$Grid$col,
 																_List_fromArray(
-																	[rundis$elm_bootstrap$Bootstrap$Grid$Col$sm4]),
+																	[rundis$elm_bootstrap$Bootstrap$Grid$Col$sm4, rundis$elm_bootstrap$Bootstrap$Grid$Col$lg3]),
 																_List_fromArray(
 																	[
 																		rundis$elm_bootstrap$Bootstrap$Form$InputGroup$view(

@@ -467,7 +467,7 @@ viewOfMainTabItem model =
                         [ Card.config []
                             |> Card.header []
                                 [ Grid.row []
-                                    [ Grid.col [ Col.sm2 ] [ text "Tape Status" ]
+                                    [ Grid.col [ Col.sm2, Col.lg3 ] [ text "Tape Status" ]
                                     , Grid.col [ Col.sm6 ]
                                         [ text " Display value as: "
                                         , ButtonGroup.radioButtonGroup [ ButtonGroup.small ]
@@ -485,7 +485,7 @@ viewOfMainTabItem model =
                                                 [ text "Char" ]
                                             ]
                                         ]
-                                    , Grid.col [ Col.sm4 ]
+                                    , Grid.col [ Col.sm4, Col.lg3 ]
                                         [ InputGroup.config
                                             (InputGroup.text [ Input.value <| String.fromInt model.runningState.currentTapePage, Input.onInput (String.toInt >> Maybe.withDefault 0 >> UpdateCurrentTapePage >> UpdateRunningState) ])
                                             |> InputGroup.small
@@ -532,7 +532,7 @@ viewOfDebugTabItem _ =
         , link = Tab.link [] [ text "Debug" ]
         , pane =
             Tab.pane [ Spacing.mt3 ]
-                [ Button.button [ Button.onClick <| ChangeProgramContent "++++++++++[>+++++++>++++++++++>+++>+<<<<-]>++.>+.+++++++..+++.>++.<<+++++++++++++++.>.+++.------.--------.>+.>." ] [ text "BF Hello world program" ] ]
+                [ Button.button [ Button.onClick <| ChangeProgramContent "++++++++++[>+++++++>++++++++++>+++>+<<<<-]>++.>+.+++++++..+++.>++.<<+++++++++++++++.>.+++.------.--------.>+.>." ] [ text "Set BF Hello world program" ] ]
         }
 
 
