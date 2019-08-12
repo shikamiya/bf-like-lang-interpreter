@@ -579,7 +579,11 @@ tableViewOfTapeLine model line =
                 )
                 list
     in
-    Table.simpleTable ( Table.simpleThead header, Table.tbody [] [ Table.tr [] body ] )
+    Table.table
+        { options = [ Table.small ]
+        , thead = Table.simpleThead header
+        , tbody = Table.tbody [] [ Table.tr [] body ]
+        }
 
 
 convertTapeValue : ShowBFTapeAs -> Int -> String
