@@ -10922,6 +10922,7 @@ var rundis$elm_bootstrap$Bootstrap$Grid$Internal$RowAttrs = function (a) {
 var rundis$elm_bootstrap$Bootstrap$Grid$Row$attrs = function (attrs_) {
 	return rundis$elm_bootstrap$Bootstrap$Grid$Internal$RowAttrs(attrs_);
 };
+var rundis$elm_bootstrap$Bootstrap$Utilities$Spacing$mt2 = elm$html$Html$Attributes$class('mt-2');
 var author$project$Main$viewOfMainTabItem = function (model) {
 	return rundis$elm_bootstrap$Bootstrap$Tab$item(
 		{
@@ -11092,7 +11093,13 @@ var author$project$Main$viewOfMainTabItem = function (model) {
 																	[
 																		elm$html$Html$text('Output')
 																	]),
-																rundis$elm_bootstrap$Bootstrap$Card$config(_List_Nil))))
+																rundis$elm_bootstrap$Bootstrap$Card$config(
+																	_List_fromArray(
+																		[
+																			rundis$elm_bootstrap$Bootstrap$Card$attrs(
+																			_List_fromArray(
+																				[rundis$elm_bootstrap$Bootstrap$Utilities$Spacing$mt2]))
+																		])))))
 													]))
 											]))
 									]))

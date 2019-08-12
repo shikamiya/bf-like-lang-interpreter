@@ -392,7 +392,7 @@ viewOfMainTabItem model =
                             ]
                         , Grid.row []
                             [ Grid.col []
-                                [ Card.config []
+                                [ Card.config [ Card.attrs [ Spacing.mt2 ] ]
                                     |> Card.header [] [ text "Output" ]
                                     |> Card.block []
                                         [ Html.p []
