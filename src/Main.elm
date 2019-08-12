@@ -3,7 +3,7 @@ module Main exposing (main)
 import Array exposing (Array)
 import BFExecutor exposing (getMaybeTapeValue, runBFCommandByStep, runBFCommands)
 import BFParser exposing (parseTokens)
-import BFTypes exposing (BFCommand(..), BFParseError(..), BFRunningState, BFTape(..), BFTokenKind(..), BFTokenTable, initialRunningState, tapePages, tapeSize)
+import BFTypes exposing (BFCommand(..), BFParseError(..), BFRunningState, BFTape(..), BFToken, BFTokenKind(..), BFTokenTable, bfParseErrorToString, initialRunningState, tapePages, tapeSize, tokenKindToString)
 import Bootstrap.Button as Button
 import Bootstrap.ButtonGroup as ButtonGroup
 import Bootstrap.CDN
@@ -684,15 +684,21 @@ viewOfBFCommand model pos cmd =
                         brWithSpacings depth
 
                     else
-                        Html.span
-                            [ Html.Attributes.classList
-                                [ ( "text-muted", not isError )
-                                , ( "text-danger", isError )
-                                , ( "font-weight-bold", isError )
-                                , ( "d-none", not visible )
-                                ]
-                            ]
-                            [ text token.value ]
+                        Html.div [ Html.Attributes.classList [ ( "my-hidden-popover", not isCurrentPopoverCommand ), ( "d-inline-block", True ) ] ]
+                            (Popover.config
+                                (Html.span
+                                    (Html.Attributes.classList
+                                        [ ( "text-muted", not isError )
+                                        , ( "text-danger", isError )
+                                        , ( "font-weight-bold", isError )
+                                        , ( "d-none", not visible )
+                                        ]
+                                        :: Popover.onClick model.popoverState (ChangePopoverState pos)
+                                    )
+                                    [ text token.value ]
+                                )
+                                |> commandPopoverView token model.popoverState pos
+                            )
                             |> List.singleton
 
                 _ ->
@@ -716,16 +722,7 @@ viewOfBFCommand model pos cmd =
                                 )
                                 [ text displayValue ]
                             )
-                            |> Popover.titleH4 [] [ text "Command Information" ]
-                            |> Popover.content []
-                                [ text "Value: "
-                                , text token.value
-                                , Html.br [] []
-                                , text "Position: "
-                                , text (List.reverse pos |> List.map String.fromInt |> String.join ", ")
-                                ]
-                            |> Popover.view model.popoverState
-                            |> List.singleton
+                            |> commandPopoverView token model.popoverState pos
                         )
                         |> List.singleton
 
@@ -735,3 +732,29 @@ viewOfBFCommand model pos cmd =
                     viewOfBFCommands model pos commands
             in
             List.concat [ brWithSpacings <| depth + 1, children, brWithSpacings depth ]
+
+
+commandPopoverView : BFToken -> Popover.State -> List Int -> Popover.Config msg -> List (Html msg)
+commandPopoverView token state pos config =
+    Popover.titleH4 [] [ text "Command: ", text <| tokenKindToString token.kind ] config
+        |> Popover.content []
+            (List.concat
+                [ [ text "Value: "
+                  , text token.value
+                  , Html.br [] []
+                  , text "Position: "
+                  , text (List.reverse pos |> List.map String.fromInt |> String.join ", ")
+                  ]
+                , case token.error of
+                    Nothing ->
+                        []
+
+                    Just error ->
+                        [ Html.br [] []
+                        , text "Parse Error: "
+                        , text <| bfParseErrorToString error
+                        ]
+                ]
+            )
+        |> Popover.view state
+        |> List.singleton

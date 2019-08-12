@@ -1,4 +1,4 @@
-module BFTypes exposing (BFCommand(..), BFParseError(..), BFRunningState, BFTape(..), BFToken, BFTokenKind(..), BFTokenTable, bfParseErrorToString, extractBFTape, initialBFTape, initialRunningState, tapePages, tapeSize)
+module BFTypes exposing (BFCommand(..), BFParseError(..), BFRunningState, BFTape(..), BFToken, BFTokenKind(..), BFTokenTable, bfParseErrorToString, extractBFTape, initialBFTape, initialRunningState, tapePages, tapeSize, tokenKindToString)
 
 import Array exposing (Array)
 
@@ -102,3 +102,34 @@ extractBFTape tape =
             tape
     in
     tapeArray
+
+
+tokenKindToString : BFTokenKind -> String
+tokenKindToString kind =
+    case kind of
+        NoOp ->
+            "NoOp"
+
+        LoopStart ->
+            "LoopStart"
+
+        LoopEnd ->
+            "LoopEnd"
+
+        IncreaseValue ->
+            "IncreaseValue"
+
+        DecreaseValue ->
+            "DecreaseValue"
+
+        IncreasePointer ->
+            "IncreasePointer"
+
+        DecreasePointer ->
+            "DecreasePointer"
+
+        ReadInput ->
+            "ReadInput"
+
+        PrintOutput ->
+            "PrintOutput"

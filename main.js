@@ -784,11 +784,11 @@ function _Debug_crash_UNUSED(identifier, fact1, fact2, fact3, fact4)
 
 function _Debug_regionToString(region)
 {
-	if (region.cm.au === region.cG.au)
+	if (region.cm.av === region.cG.av)
 	{
-		return 'on line ' + region.cm.au;
+		return 'on line ' + region.cm.av;
 	}
-	return 'on lines ' + region.cm.au + ' through ' + region.cG.au;
+	return 'on lines ' + region.cm.av + ' through ' + region.cG.av;
 }
 
 
@@ -4358,8 +4358,8 @@ function _Browser_getViewport()
 		dx: {
 			b1: _Browser_window.pageXOffset,
 			b2: _Browser_window.pageYOffset,
-			aj: _Browser_doc.documentElement.clientWidth,
-			_: _Browser_doc.documentElement.clientHeight
+			ak: _Browser_doc.documentElement.clientWidth,
+			aa: _Browser_doc.documentElement.clientHeight
 		}
 	};
 }
@@ -4369,8 +4369,8 @@ function _Browser_getScene()
 	var body = _Browser_doc.body;
 	var elem = _Browser_doc.documentElement;
 	return {
-		aj: Math.max(body.scrollWidth, body.offsetWidth, elem.scrollWidth, elem.offsetWidth, elem.clientWidth),
-		_: Math.max(body.scrollHeight, body.offsetHeight, elem.scrollHeight, elem.offsetHeight, elem.clientHeight)
+		ak: Math.max(body.scrollWidth, body.offsetWidth, elem.scrollWidth, elem.offsetWidth, elem.clientWidth),
+		aa: Math.max(body.scrollHeight, body.offsetHeight, elem.scrollHeight, elem.offsetHeight, elem.clientHeight)
 	};
 }
 
@@ -4394,14 +4394,14 @@ function _Browser_getViewportOf(id)
 	{
 		return {
 			dj: {
-				aj: node.scrollWidth,
-				_: node.scrollHeight
+				ak: node.scrollWidth,
+				aa: node.scrollHeight
 			},
 			dx: {
 				b1: node.scrollLeft,
 				b2: node.scrollTop,
-				aj: node.clientWidth,
-				_: node.clientHeight
+				ak: node.clientWidth,
+				aa: node.clientHeight
 			}
 		};
 	});
@@ -4435,14 +4435,14 @@ function _Browser_getElement(id)
 			dx: {
 				b1: x,
 				b2: y,
-				aj: _Browser_doc.documentElement.clientWidth,
-				_: _Browser_doc.documentElement.clientHeight
+				ak: _Browser_doc.documentElement.clientWidth,
+				aa: _Browser_doc.documentElement.clientHeight
 			},
 			dF: {
 				b1: x + rect.left,
 				b2: y + rect.top,
-				aj: rect.width,
-				_: rect.height
+				ak: rect.width,
+				aa: rect.height
 			}
 		};
 	});
@@ -4789,7 +4789,7 @@ var author$project$BFTypes$initialRunningState = {
 	cC: 0,
 	a4: elm$core$Maybe$Nothing,
 	dN: '',
-	ar: 0,
+	as: 0,
 	c2: _List_Nil,
 	c6: _List_Nil,
 	D: author$project$BFTypes$initialBFTape,
@@ -4821,27 +4821,27 @@ var rundis$elm_bootstrap$Bootstrap$Dropdown$Closed = 2;
 var rundis$elm_bootstrap$Bootstrap$Dropdown$State = elm$core$Basics$identity;
 var rundis$elm_bootstrap$Bootstrap$Utilities$DomHelper$Area = F4(
 	function (top, left, width, height) {
-		return {_: height, L: left, R: top, aj: width};
+		return {aa: height, L: left, S: top, ak: width};
 	});
 var rundis$elm_bootstrap$Bootstrap$Dropdown$initialState = {
-	av: A4(rundis$elm_bootstrap$Bootstrap$Utilities$DomHelper$Area, 0, 0, 0, 0),
+	aw: A4(rundis$elm_bootstrap$Bootstrap$Utilities$DomHelper$Area, 0, 0, 0, 0),
 	q: 2,
 	bT: A4(rundis$elm_bootstrap$Bootstrap$Utilities$DomHelper$Area, 0, 0, 0, 0)
 };
-var author$project$Main$initialTokenTableState = {I: rundis$elm_bootstrap$Bootstrap$Dropdown$initialState, Q: author$project$Language$BF$table};
+var author$project$Main$initialTokenTableState = {I: rundis$elm_bootstrap$Bootstrap$Dropdown$initialState, R: author$project$Language$BF$table};
 var rundis$elm_bootstrap$Bootstrap$Popover$State = elm$core$Basics$identity;
 var rundis$elm_bootstrap$Bootstrap$Popover$initialState = {
 	b8: {
 		cf: 0,
 		bm: 0,
-		ck: {_: 0, L: 0, R: 0, aj: 0}
+		ck: {aa: 0, L: 0, S: 0, ak: 0}
 	},
-	ab: false
+	ac: false
 };
 var rundis$elm_bootstrap$Bootstrap$Tab$Showing = 2;
 var rundis$elm_bootstrap$Bootstrap$Tab$State = elm$core$Basics$identity;
 var rundis$elm_bootstrap$Bootstrap$Tab$initialState = {aN: elm$core$Maybe$Nothing, k: 2};
-var author$project$Main$initialModel = {X: true, z: author$project$Main$initialTokenTableState, C: author$project$Main$initialTokenTableState, ay: rundis$elm_bootstrap$Bootstrap$Popover$initialState, O: '', i: author$project$BFTypes$initialRunningState, P: 0, bR: rundis$elm_bootstrap$Bootstrap$Tab$initialState};
+var author$project$Main$initialModel = {Y: true, z: author$project$Main$initialTokenTableState, C: author$project$Main$initialTokenTableState, O: rundis$elm_bootstrap$Bootstrap$Popover$initialState, P: '', i: author$project$BFTypes$initialRunningState, Q: 0, bR: rundis$elm_bootstrap$Bootstrap$Tab$initialState};
 var elm$core$Result$withDefault = F2(
 	function (def, result) {
 		if (!result.$) {
@@ -5089,7 +5089,7 @@ var author$project$Main$decodeModel = function (value) {
 				A2(elm$json$Json$Decode$decodeValue, elm$json$Json$Decode$string, value))));
 	return _Utils_update(
 		author$project$Main$initialModel,
-		{O: programContent});
+		{P: programContent});
 };
 var author$project$BFParser$BFCommandList = elm$core$Basics$identity;
 var author$project$BFParser$BFCommandStack = elm$core$Basics$identity;
@@ -6106,7 +6106,7 @@ var author$project$BFExecutor$runBFCommandByStep = function (state) {
 							});
 					case 7:
 						var maybeInput = elm$core$String$uncons(
-							A2(elm$core$String$dropLeft, state.ar, state.dN));
+							A2(elm$core$String$dropLeft, state.as, state.dN));
 						if (!maybeInput.$) {
 							var _n6 = maybeInput.a;
 							var input = _n6.a;
@@ -6114,7 +6114,7 @@ var author$project$BFExecutor$runBFCommandByStep = function (state) {
 								state,
 								{
 									j: indices,
-									ar: state.ar + 1,
+									as: state.as + 1,
 									D: A3(
 										author$project$BFExecutor$setTapeValue,
 										state.D,
@@ -6124,7 +6124,7 @@ var author$project$BFExecutor$runBFCommandByStep = function (state) {
 						} else {
 							return _Utils_update(
 								state,
-								{j: indices, ar: state.ar + 1});
+								{j: indices, as: state.as + 1});
 						}
 					default:
 						var outputChar = elm$core$Char$fromCode(
@@ -6231,7 +6231,7 @@ var author$project$Main$updateTokenTableState = F2(
 			var tokenTable = msg.a;
 			return _Utils_update(
 				tokenTableDropdown,
-				{Q: tokenTable});
+				{R: tokenTable});
 		}
 	});
 var author$project$Cacher$cache = _Platform_outgoingPort('cache', elm$core$Basics$identity);
@@ -6255,7 +6255,7 @@ var author$project$Main$encodeModel = function (model) {
 			[
 				_Utils_Tuple2(
 				'programContent',
-				elm$json$Json$Encode$string(model.O))
+				elm$json$Json$Encode$string(model.P))
 			]));
 };
 var elm$core$Platform$Cmd$batch = _Platform_batch;
@@ -6366,7 +6366,7 @@ var author$project$Main$update = F2(
 				return author$project$Main$withCacheCmd(
 					_Utils_update(
 						model,
-						{O: programContent}));
+						{P: programContent}));
 			case 2:
 				var state = msg.a;
 				return author$project$Main$withCmdNone(
@@ -6378,13 +6378,13 @@ var author$project$Main$update = F2(
 				return author$project$Main$withCmdNone(
 					_Utils_update(
 						model,
-						{X: visibility}));
+						{Y: visibility}));
 			case 4:
 				var state = msg.a;
 				return author$project$Main$withCmdNone(
 					_Utils_update(
 						model,
-						{ay: state}));
+						{O: state}));
 			case 5:
 				var pos = msg.a;
 				var state = msg.b;
@@ -6408,7 +6408,7 @@ var author$project$Main$update = F2(
 				return author$project$Main$withCmdNone(
 					_Utils_update(
 						model,
-						{P: state}));
+						{Q: state}));
 			case 7:
 				var tokenTableStateMsg = msg.a;
 				var state = A2(author$project$Main$updateTokenTableState, tokenTableStateMsg, model.C);
@@ -6430,7 +6430,7 @@ var author$project$Main$update = F2(
 				var commands = A2(
 					elm$core$Result$withDefault,
 					model.i.cB,
-					A2(author$project$BFParser$parseTokens, model.C.Q, model.O));
+					A2(author$project$BFParser$parseTokens, model.C.R, model.P));
 				return author$project$Main$withCmdNone(
 					A2(
 						author$project$Main$update,
@@ -8169,7 +8169,7 @@ var author$project$Main$tableViewOfTapeLine = F2(
 					'',
 					A2(
 						elm$core$Maybe$map,
-						author$project$Main$convertTapeValue(model.P),
+						author$project$Main$convertTapeValue(model.Q),
 						A2(author$project$BFExecutor$getMaybeTapeValue, model.i.D, address)));
 				return A2(
 					rundis$elm_bootstrap$Bootstrap$Table$td,
@@ -8194,6 +8194,328 @@ var author$project$Main$tableViewOfTapeLine = F2(
 var author$project$Main$ChangePopoverState = F2(
 	function (a, b) {
 		return {$: 5, a: a, b: b};
+	});
+var author$project$BFTypes$bfParseErrorToString = function (error) {
+	if (!error) {
+		return 'Loop End shouldn\'t be here';
+	} else {
+		return 'Loop End should be here';
+	}
+};
+var author$project$BFTypes$tokenKindToString = function (kind) {
+	switch (kind) {
+		case 0:
+			return 'NoOp';
+		case 1:
+			return 'LoopStart';
+		case 2:
+			return 'LoopEnd';
+		case 3:
+			return 'IncreaseValue';
+		case 4:
+			return 'DecreaseValue';
+		case 5:
+			return 'IncreasePointer';
+		case 6:
+			return 'DecreasePointer';
+		case 7:
+			return 'ReadInput';
+		default:
+			return 'PrintOutput';
+	}
+};
+var elm$core$List$append = F2(
+	function (xs, ys) {
+		if (!ys.b) {
+			return xs;
+		} else {
+			return A3(elm$core$List$foldr, elm$core$List$cons, ys, xs);
+		}
+	});
+var elm$core$List$concat = function (lists) {
+	return A3(elm$core$List$foldr, elm$core$List$append, _List_Nil, lists);
+};
+var elm$html$Html$br = _VirtualDom_node('br');
+var rundis$elm_bootstrap$Bootstrap$Popover$Config = elm$core$Basics$identity;
+var rundis$elm_bootstrap$Bootstrap$Popover$Content = elm$core$Basics$identity;
+var rundis$elm_bootstrap$Bootstrap$Popover$content = F3(
+	function (attributes, children, _n0) {
+		var conf = _n0;
+		return _Utils_update(
+			conf,
+			{
+				dD: elm$core$Maybe$Just(
+					A2(
+						elm$html$Html$div,
+						A2(
+							elm$core$List$cons,
+							elm$html$Html$Attributes$class('popover-body'),
+							attributes),
+						children))
+			});
+	});
+var elm$html$Html$h4 = _VirtualDom_node('h4');
+var rundis$elm_bootstrap$Bootstrap$Popover$Title = elm$core$Basics$identity;
+var rundis$elm_bootstrap$Bootstrap$Popover$titlePrivate = F4(
+	function (elemFn, attributes, children, _n0) {
+		var conf = _n0;
+		return _Utils_update(
+			conf,
+			{
+				dV: elm$core$Maybe$Just(
+					A2(
+						elemFn,
+						A2(
+							elm$core$List$cons,
+							elm$html$Html$Attributes$class('popover-header'),
+							attributes),
+						children))
+			});
+	});
+var rundis$elm_bootstrap$Bootstrap$Popover$titleH4 = rundis$elm_bootstrap$Bootstrap$Popover$titlePrivate(elm$html$Html$h4);
+var elm$virtual_dom$VirtualDom$style = _VirtualDom_style;
+var elm$html$Html$Attributes$style = elm$virtual_dom$VirtualDom$style;
+var elm$core$String$fromFloat = _String_fromNumber;
+var rundis$elm_bootstrap$Bootstrap$Popover$calculatePos = F2(
+	function (pos, _n0) {
+		var rect = _n0.ck;
+		var offsetWidth = _n0.bm;
+		var offsetHeight = _n0.cf;
+		switch (pos) {
+			case 3:
+				return {
+					W: elm$core$Maybe$Nothing,
+					X: elm$core$Maybe$Just((offsetHeight / 2) - 12),
+					L: (-offsetWidth) - 10,
+					S: (rect.aa / 2) - (offsetHeight / 2)
+				};
+			case 1:
+				return {
+					W: elm$core$Maybe$Nothing,
+					X: elm$core$Maybe$Just((offsetHeight / 2) - 12),
+					L: rect.ak,
+					S: (rect.aa / 2) - (offsetHeight / 2)
+				};
+			case 0:
+				return {
+					W: elm$core$Maybe$Just((offsetWidth / 2) - 12),
+					X: elm$core$Maybe$Nothing,
+					L: (rect.ak / 2) - (offsetWidth / 2),
+					S: (-offsetHeight) - 10
+				};
+			default:
+				return {
+					W: elm$core$Maybe$Just((offsetWidth / 2) - 12),
+					X: elm$core$Maybe$Nothing,
+					L: (rect.ak / 2) - (offsetWidth / 2),
+					S: rect.aa
+				};
+		}
+	});
+var elm$virtual_dom$VirtualDom$attribute = F2(
+	function (key, value) {
+		return A2(
+			_VirtualDom_attribute,
+			_VirtualDom_noOnOrFormAction(key),
+			_VirtualDom_noJavaScriptOrHtmlUri(value));
+	});
+var elm$html$Html$Attributes$attribute = elm$virtual_dom$VirtualDom$attribute;
+var rundis$elm_bootstrap$Bootstrap$Popover$directionAttr = function (position) {
+	return A2(
+		elm$html$Html$Attributes$attribute,
+		'x-placement',
+		function () {
+			switch (position) {
+				case 3:
+					return 'left';
+				case 1:
+					return 'right';
+				case 0:
+					return 'top';
+				default:
+					return 'bottom';
+			}
+		}());
+};
+var rundis$elm_bootstrap$Bootstrap$Popover$positionClass = function (position) {
+	switch (position) {
+		case 3:
+			return _Utils_Tuple2('bs-popover-left', true);
+		case 1:
+			return _Utils_Tuple2('bs-popover-right', true);
+		case 0:
+			return _Utils_Tuple2('bs-popover-top', true);
+		default:
+			return _Utils_Tuple2('bs-popover-bottom', true);
+	}
+};
+var rundis$elm_bootstrap$Bootstrap$Popover$popoverView = F2(
+	function (_n0, _n1) {
+		var isActive = _n0.ac;
+		var domState = _n0.b8;
+		var conf = _n1;
+		var px = function (f) {
+			return elm$core$String$fromFloat(f) + 'px';
+		};
+		var pos = A2(rundis$elm_bootstrap$Bootstrap$Popover$calculatePos, conf.y, domState);
+		var styles = isActive ? _List_fromArray(
+			[
+				A2(
+				elm$html$Html$Attributes$style,
+				'left',
+				px(pos.L)),
+				A2(
+				elm$html$Html$Attributes$style,
+				'top',
+				px(pos.S)),
+				A2(elm$html$Html$Attributes$style, 'display', 'inline-block'),
+				A2(
+				elm$html$Html$Attributes$style,
+				'width',
+				px(domState.bm))
+			]) : _List_fromArray(
+			[
+				A2(elm$html$Html$Attributes$style, 'left', '-5000px'),
+				A2(elm$html$Html$Attributes$style, 'top', '-5000px')
+			]);
+		var arrowStyles = A2(
+			elm$core$List$filterMap,
+			elm$core$Basics$identity,
+			_List_fromArray(
+				[
+					A2(
+					elm$core$Maybe$map,
+					function (t) {
+						return A2(
+							elm$html$Html$Attributes$style,
+							'top',
+							px(t));
+					},
+					pos.X),
+					A2(
+					elm$core$Maybe$map,
+					function (l) {
+						return A2(
+							elm$html$Html$Attributes$style,
+							'left',
+							px(l));
+					},
+					pos.W)
+				]));
+		return A2(
+			elm$html$Html$div,
+			_Utils_ap(
+				_List_fromArray(
+					[
+						elm$html$Html$Attributes$classList(
+						_List_fromArray(
+							[
+								_Utils_Tuple2('popover', true),
+								_Utils_Tuple2('fade', true),
+								_Utils_Tuple2('show', isActive),
+								rundis$elm_bootstrap$Bootstrap$Popover$positionClass(conf.y)
+							])),
+						rundis$elm_bootstrap$Bootstrap$Popover$directionAttr(conf.y)
+					]),
+				styles),
+			A2(
+				elm$core$List$filterMap,
+				elm$core$Basics$identity,
+				_List_fromArray(
+					[
+						elm$core$Maybe$Just(
+						A2(
+							elm$html$Html$div,
+							A2(
+								elm$core$List$cons,
+								elm$html$Html$Attributes$class('arrow'),
+								arrowStyles),
+							_List_Nil)),
+						A2(
+						elm$core$Maybe$map,
+						function (_n2) {
+							var t = _n2;
+							return t;
+						},
+						conf.dV),
+						A2(
+						elm$core$Maybe$map,
+						function (_n3) {
+							var c = _n3;
+							return c;
+						},
+						conf.dD)
+					])));
+	});
+var rundis$elm_bootstrap$Bootstrap$Popover$view = F2(
+	function (state, conf) {
+		var triggerElement = conf.dw;
+		return A2(
+			elm$html$Html$div,
+			_List_fromArray(
+				[
+					A2(elm$html$Html$Attributes$style, 'position', 'relative'),
+					A2(elm$html$Html$Attributes$style, 'display', 'inline-block')
+				]),
+			_List_fromArray(
+				[
+					triggerElement,
+					A2(rundis$elm_bootstrap$Bootstrap$Popover$popoverView, state, conf)
+				]));
+	});
+var author$project$Main$commandPopoverView = F4(
+	function (token, state, pos, config) {
+		return elm$core$List$singleton(
+			A2(
+				rundis$elm_bootstrap$Bootstrap$Popover$view,
+				state,
+				A3(
+					rundis$elm_bootstrap$Bootstrap$Popover$content,
+					_List_Nil,
+					elm$core$List$concat(
+						_List_fromArray(
+							[
+								_List_fromArray(
+								[
+									elm$html$Html$text('Value: '),
+									elm$html$Html$text(token.dY),
+									A2(elm$html$Html$br, _List_Nil, _List_Nil),
+									elm$html$Html$text('Position: '),
+									elm$html$Html$text(
+									A2(
+										elm$core$String$join,
+										', ',
+										A2(
+											elm$core$List$map,
+											elm$core$String$fromInt,
+											elm$core$List$reverse(pos))))
+								]),
+								function () {
+								var _n0 = token.a4;
+								if (_n0.$ === 1) {
+									return _List_Nil;
+								} else {
+									var error = _n0.a;
+									return _List_fromArray(
+										[
+											A2(elm$html$Html$br, _List_Nil, _List_Nil),
+											elm$html$Html$text('Parse Error: '),
+											elm$html$Html$text(
+											author$project$BFTypes$bfParseErrorToString(error))
+										]);
+								}
+							}()
+							])),
+					A3(
+						rundis$elm_bootstrap$Bootstrap$Popover$titleH4,
+						_List_Nil,
+						_List_fromArray(
+							[
+								elm$html$Html$text('Command: '),
+								elm$html$Html$text(
+								author$project$BFTypes$tokenKindToString(token.cV))
+							]),
+						config))));
 	});
 var elm$core$Elm$JsArray$foldl = _JsArray_foldl;
 var elm$core$Elm$JsArray$indexedMap = _JsArray_indexedMap;
@@ -8233,17 +8555,6 @@ var elm$core$Array$indexedMap = F2(
 			true,
 			A3(elm$core$Elm$JsArray$foldl, helper, initialBuilder, tree));
 	});
-var elm$core$List$append = F2(
-	function (xs, ys) {
-		if (!ys.b) {
-			return xs;
-		} else {
-			return A3(elm$core$List$foldr, elm$core$List$cons, ys, xs);
-		}
-	});
-var elm$core$List$concat = function (lists) {
-	return A3(elm$core$List$foldr, elm$core$List$append, _List_Nil, lists);
-};
 var elm$core$List$repeatHelp = F3(
 	function (result, n, value) {
 		repeatHelp:
@@ -8265,30 +8576,11 @@ var elm$core$List$repeat = F2(
 	function (n, value) {
 		return A3(elm$core$List$repeatHelp, _List_Nil, n, value);
 	});
-var elm$html$Html$br = _VirtualDom_node('br');
 var elm$html$Html$span = _VirtualDom_node('span');
-var rundis$elm_bootstrap$Bootstrap$Popover$Config = elm$core$Basics$identity;
 var rundis$elm_bootstrap$Bootstrap$Popover$Top = 0;
 var rundis$elm_bootstrap$Bootstrap$Popover$config = function (triggerElement) {
 	return {dD: elm$core$Maybe$Nothing, y: 0, dV: elm$core$Maybe$Nothing, dw: triggerElement};
 };
-var rundis$elm_bootstrap$Bootstrap$Popover$Content = elm$core$Basics$identity;
-var rundis$elm_bootstrap$Bootstrap$Popover$content = F3(
-	function (attributes, children, _n0) {
-		var conf = _n0;
-		return _Utils_update(
-			conf,
-			{
-				dD: elm$core$Maybe$Just(
-					A2(
-						elm$html$Html$div,
-						A2(
-							elm$core$List$cons,
-							elm$html$Html$Attributes$class('popover-body'),
-							attributes),
-						children))
-			});
-	});
 var elm$virtual_dom$VirtualDom$Normal = function (a) {
 	return {$: 0, a: a};
 };
@@ -8422,7 +8714,7 @@ var rundis$elm_bootstrap$Bootstrap$Utilities$DomHelper$boundingArea = A4(
 		function (_n0, width, height) {
 			var x = _n0.a;
 			var y = _n0.b;
-			return {_: height, L: x, R: y, aj: width};
+			return {aa: height, L: x, S: y, ak: width};
 		}),
 	A2(rundis$elm_bootstrap$Bootstrap$Utilities$DomHelper$position, 0, 0),
 	rundis$elm_bootstrap$Bootstrap$Utilities$DomHelper$offsetWidth,
@@ -8475,15 +8767,15 @@ var rundis$elm_bootstrap$Bootstrap$Popover$stateDecoder = A4(
 var rundis$elm_bootstrap$Bootstrap$Popover$toggleState = F2(
 	function (_n0, toMsg) {
 		var state = _n0;
-		var isActive = state.ab;
+		var isActive = state.ac;
 		return A2(
 			elm$json$Json$Decode$andThen,
 			function (v) {
 				return elm$json$Json$Decode$succeed(
 					toMsg(
-						(!isActive) ? {b8: v, ab: true} : _Utils_update(
+						(!isActive) ? {b8: v, ac: true} : _Utils_update(
 							state,
-							{ab: false})));
+							{ac: false})));
 			},
 			rundis$elm_bootstrap$Bootstrap$Popover$stateDecoder);
 	});
@@ -8497,215 +8789,6 @@ var rundis$elm_bootstrap$Bootstrap$Popover$onClick = F2(
 				'click',
 				A2(rundis$elm_bootstrap$Bootstrap$Popover$toggleState, state, toMsg))
 			]);
-	});
-var elm$html$Html$h4 = _VirtualDom_node('h4');
-var rundis$elm_bootstrap$Bootstrap$Popover$Title = elm$core$Basics$identity;
-var rundis$elm_bootstrap$Bootstrap$Popover$titlePrivate = F4(
-	function (elemFn, attributes, children, _n0) {
-		var conf = _n0;
-		return _Utils_update(
-			conf,
-			{
-				dV: elm$core$Maybe$Just(
-					A2(
-						elemFn,
-						A2(
-							elm$core$List$cons,
-							elm$html$Html$Attributes$class('popover-header'),
-							attributes),
-						children))
-			});
-	});
-var rundis$elm_bootstrap$Bootstrap$Popover$titleH4 = rundis$elm_bootstrap$Bootstrap$Popover$titlePrivate(elm$html$Html$h4);
-var elm$virtual_dom$VirtualDom$style = _VirtualDom_style;
-var elm$html$Html$Attributes$style = elm$virtual_dom$VirtualDom$style;
-var elm$core$String$fromFloat = _String_fromNumber;
-var rundis$elm_bootstrap$Bootstrap$Popover$calculatePos = F2(
-	function (pos, _n0) {
-		var rect = _n0.ck;
-		var offsetWidth = _n0.bm;
-		var offsetHeight = _n0.cf;
-		switch (pos) {
-			case 3:
-				return {
-					V: elm$core$Maybe$Nothing,
-					W: elm$core$Maybe$Just((offsetHeight / 2) - 12),
-					L: (-offsetWidth) - 10,
-					R: (rect._ / 2) - (offsetHeight / 2)
-				};
-			case 1:
-				return {
-					V: elm$core$Maybe$Nothing,
-					W: elm$core$Maybe$Just((offsetHeight / 2) - 12),
-					L: rect.aj,
-					R: (rect._ / 2) - (offsetHeight / 2)
-				};
-			case 0:
-				return {
-					V: elm$core$Maybe$Just((offsetWidth / 2) - 12),
-					W: elm$core$Maybe$Nothing,
-					L: (rect.aj / 2) - (offsetWidth / 2),
-					R: (-offsetHeight) - 10
-				};
-			default:
-				return {
-					V: elm$core$Maybe$Just((offsetWidth / 2) - 12),
-					W: elm$core$Maybe$Nothing,
-					L: (rect.aj / 2) - (offsetWidth / 2),
-					R: rect._
-				};
-		}
-	});
-var elm$virtual_dom$VirtualDom$attribute = F2(
-	function (key, value) {
-		return A2(
-			_VirtualDom_attribute,
-			_VirtualDom_noOnOrFormAction(key),
-			_VirtualDom_noJavaScriptOrHtmlUri(value));
-	});
-var elm$html$Html$Attributes$attribute = elm$virtual_dom$VirtualDom$attribute;
-var rundis$elm_bootstrap$Bootstrap$Popover$directionAttr = function (position) {
-	return A2(
-		elm$html$Html$Attributes$attribute,
-		'x-placement',
-		function () {
-			switch (position) {
-				case 3:
-					return 'left';
-				case 1:
-					return 'right';
-				case 0:
-					return 'top';
-				default:
-					return 'bottom';
-			}
-		}());
-};
-var rundis$elm_bootstrap$Bootstrap$Popover$positionClass = function (position) {
-	switch (position) {
-		case 3:
-			return _Utils_Tuple2('bs-popover-left', true);
-		case 1:
-			return _Utils_Tuple2('bs-popover-right', true);
-		case 0:
-			return _Utils_Tuple2('bs-popover-top', true);
-		default:
-			return _Utils_Tuple2('bs-popover-bottom', true);
-	}
-};
-var rundis$elm_bootstrap$Bootstrap$Popover$popoverView = F2(
-	function (_n0, _n1) {
-		var isActive = _n0.ab;
-		var domState = _n0.b8;
-		var conf = _n1;
-		var px = function (f) {
-			return elm$core$String$fromFloat(f) + 'px';
-		};
-		var pos = A2(rundis$elm_bootstrap$Bootstrap$Popover$calculatePos, conf.y, domState);
-		var styles = isActive ? _List_fromArray(
-			[
-				A2(
-				elm$html$Html$Attributes$style,
-				'left',
-				px(pos.L)),
-				A2(
-				elm$html$Html$Attributes$style,
-				'top',
-				px(pos.R)),
-				A2(elm$html$Html$Attributes$style, 'display', 'inline-block'),
-				A2(
-				elm$html$Html$Attributes$style,
-				'width',
-				px(domState.bm))
-			]) : _List_fromArray(
-			[
-				A2(elm$html$Html$Attributes$style, 'left', '-5000px'),
-				A2(elm$html$Html$Attributes$style, 'top', '-5000px')
-			]);
-		var arrowStyles = A2(
-			elm$core$List$filterMap,
-			elm$core$Basics$identity,
-			_List_fromArray(
-				[
-					A2(
-					elm$core$Maybe$map,
-					function (t) {
-						return A2(
-							elm$html$Html$Attributes$style,
-							'top',
-							px(t));
-					},
-					pos.W),
-					A2(
-					elm$core$Maybe$map,
-					function (l) {
-						return A2(
-							elm$html$Html$Attributes$style,
-							'left',
-							px(l));
-					},
-					pos.V)
-				]));
-		return A2(
-			elm$html$Html$div,
-			_Utils_ap(
-				_List_fromArray(
-					[
-						elm$html$Html$Attributes$classList(
-						_List_fromArray(
-							[
-								_Utils_Tuple2('popover', true),
-								_Utils_Tuple2('fade', true),
-								_Utils_Tuple2('show', isActive),
-								rundis$elm_bootstrap$Bootstrap$Popover$positionClass(conf.y)
-							])),
-						rundis$elm_bootstrap$Bootstrap$Popover$directionAttr(conf.y)
-					]),
-				styles),
-			A2(
-				elm$core$List$filterMap,
-				elm$core$Basics$identity,
-				_List_fromArray(
-					[
-						elm$core$Maybe$Just(
-						A2(
-							elm$html$Html$div,
-							A2(
-								elm$core$List$cons,
-								elm$html$Html$Attributes$class('arrow'),
-								arrowStyles),
-							_List_Nil)),
-						A2(
-						elm$core$Maybe$map,
-						function (_n2) {
-							var t = _n2;
-							return t;
-						},
-						conf.dV),
-						A2(
-						elm$core$Maybe$map,
-						function (_n3) {
-							var c = _n3;
-							return c;
-						},
-						conf.dD)
-					])));
-	});
-var rundis$elm_bootstrap$Bootstrap$Popover$view = F2(
-	function (state, conf) {
-		var triggerElement = conf.dw;
-		return A2(
-			elm$html$Html$div,
-			_List_fromArray(
-				[
-					A2(elm$html$Html$Attributes$style, 'position', 'relative'),
-					A2(elm$html$Html$Attributes$style, 'display', 'inline-block')
-				]),
-			_List_fromArray(
-				[
-					triggerElement,
-					A2(rundis$elm_bootstrap$Bootstrap$Popover$popoverView, state, conf)
-				]));
 	});
 var author$project$Main$viewOfBFCommand = F3(
 	function (model, pos, cmd) {
@@ -8737,25 +8820,45 @@ var author$project$Main$viewOfBFCommand = F3(
 			}();
 			var _n1 = token.cV;
 			if (!_n1) {
-				var visible = isError || model.X;
+				var visible = isError || model.Y;
 				return ((token.dY === '\n') && visible) ? brWithSpacings(depth) : elm$core$List$singleton(
 					A2(
-						elm$html$Html$span,
+						elm$html$Html$div,
 						_List_fromArray(
 							[
 								elm$html$Html$Attributes$classList(
 								_List_fromArray(
 									[
-										_Utils_Tuple2('text-muted', !isError),
-										_Utils_Tuple2('text-danger', isError),
-										_Utils_Tuple2('font-weight-bold', isError),
-										_Utils_Tuple2('d-none', !visible)
+										_Utils_Tuple2('my-hidden-popover', !isCurrentPopoverCommand),
+										_Utils_Tuple2('d-inline-block', true)
 									]))
 							]),
-						_List_fromArray(
-							[
-								elm$html$Html$text(token.dY)
-							])));
+						A4(
+							author$project$Main$commandPopoverView,
+							token,
+							model.O,
+							pos,
+							rundis$elm_bootstrap$Bootstrap$Popover$config(
+								A2(
+									elm$html$Html$span,
+									A2(
+										elm$core$List$cons,
+										elm$html$Html$Attributes$classList(
+											_List_fromArray(
+												[
+													_Utils_Tuple2('text-muted', !isError),
+													_Utils_Tuple2('text-danger', isError),
+													_Utils_Tuple2('font-weight-bold', isError),
+													_Utils_Tuple2('d-none', !visible)
+												])),
+										A2(
+											rundis$elm_bootstrap$Bootstrap$Popover$onClick,
+											model.O,
+											author$project$Main$ChangePopoverState(pos))),
+									_List_fromArray(
+										[
+											elm$html$Html$text(token.dY)
+										]))))));
 			} else {
 				var displayValue = A2(
 					elm$core$Maybe$withDefault,
@@ -8766,7 +8869,7 @@ var author$project$Main$viewOfBFCommand = F3(
 							function (table) {
 								return _Utils_eq(token.cV, table.a);
 							},
-							model.z.Q.a))).b;
+							model.z.R.a))).b;
 				return elm$core$List$singleton(
 					A2(
 						elm$html$Html$div,
@@ -8779,56 +8882,32 @@ var author$project$Main$viewOfBFCommand = F3(
 										_Utils_Tuple2('d-inline-block', true)
 									]))
 							]),
-						elm$core$List$singleton(
-							A2(
-								rundis$elm_bootstrap$Bootstrap$Popover$view,
-								model.ay,
-								A3(
-									rundis$elm_bootstrap$Bootstrap$Popover$content,
-									_List_Nil,
+						A4(
+							author$project$Main$commandPopoverView,
+							token,
+							model.O,
+							pos,
+							rundis$elm_bootstrap$Bootstrap$Popover$config(
+								A2(
+									elm$html$Html$span,
+									A2(
+										elm$core$List$cons,
+										elm$html$Html$Attributes$classList(
+											_List_fromArray(
+												[
+													_Utils_Tuple2('text-dark', (!isCurrentCommand) && (!isError)),
+													_Utils_Tuple2('text-success', isCurrentCommand),
+													_Utils_Tuple2('text-danger', isError),
+													_Utils_Tuple2('font-weight-bold', true)
+												])),
+										A2(
+											rundis$elm_bootstrap$Bootstrap$Popover$onClick,
+											model.O,
+											author$project$Main$ChangePopoverState(pos))),
 									_List_fromArray(
 										[
-											elm$html$Html$text('Value: '),
-											elm$html$Html$text(token.dY),
-											A2(elm$html$Html$br, _List_Nil, _List_Nil),
-											elm$html$Html$text('Position: '),
-											elm$html$Html$text(
-											A2(
-												elm$core$String$join,
-												', ',
-												A2(
-													elm$core$List$map,
-													elm$core$String$fromInt,
-													elm$core$List$reverse(pos))))
-										]),
-									A3(
-										rundis$elm_bootstrap$Bootstrap$Popover$titleH4,
-										_List_Nil,
-										_List_fromArray(
-											[
-												elm$html$Html$text('Command Information')
-											]),
-										rundis$elm_bootstrap$Bootstrap$Popover$config(
-											A2(
-												elm$html$Html$span,
-												A2(
-													elm$core$List$cons,
-													elm$html$Html$Attributes$classList(
-														_List_fromArray(
-															[
-																_Utils_Tuple2('text-dark', (!isCurrentCommand) && (!isError)),
-																_Utils_Tuple2('text-success', isCurrentCommand),
-																_Utils_Tuple2('text-danger', isError),
-																_Utils_Tuple2('font-weight-bold', true)
-															])),
-													A2(
-														rundis$elm_bootstrap$Bootstrap$Popover$onClick,
-														model.ay,
-														author$project$Main$ChangePopoverState(pos))),
-												_List_fromArray(
-													[
-														elm$html$Html$text(displayValue)
-													])))))))));
+											elm$html$Html$text(displayValue)
+										]))))));
 			}
 		} else {
 			var commands = cmd.a;
@@ -9399,18 +9478,18 @@ var rundis$elm_bootstrap$Bootstrap$Dropdown$dropdownAttributes = F2(
 						[
 							_Utils_Tuple2('btn-group', true),
 							_Utils_Tuple2('show', status !== 2),
-							_Utils_Tuple2('dropup', config.as)
+							_Utils_Tuple2('dropup', config.at)
 						]))
 				]),
 			_Utils_ap(
-				rundis$elm_bootstrap$Bootstrap$Dropdown$dropDir(config.an),
+				rundis$elm_bootstrap$Bootstrap$Dropdown$dropDir(config.ao),
 				config.aV));
 	});
 var rundis$elm_bootstrap$Bootstrap$Dropdown$menuStyles = F2(
 	function (_n0, config) {
 		var status = _n0.q;
 		var toggleSize = _n0.bT;
-		var menuSize = _n0.av;
+		var menuSize = _n0.aw;
 		var px = function (n) {
 			return elm$core$String$fromFloat(n) + 'px';
 		};
@@ -9423,7 +9502,7 @@ var rundis$elm_bootstrap$Bootstrap$Dropdown$menuStyles = F2(
 				A2(elm$html$Html$Attributes$style, 'top', '0'),
 				A2(elm$html$Html$Attributes$style, 'left', '0')
 			]);
-		var _n1 = _Utils_Tuple2(config.as, config.an);
+		var _n1 = _Utils_Tuple2(config.at, config.ao);
 		_n1$0:
 		while (true) {
 			if (!_n1.b.$) {
@@ -9446,7 +9525,7 @@ var rundis$elm_bootstrap$Bootstrap$Dropdown$menuStyles = F2(
 									A2(
 									elm$html$Html$Attributes$style,
 									'transform',
-									A3(translate, (-toggleSize.aj) - menuSize.aj, 0, 0))
+									A3(translate, (-toggleSize.ak) - menuSize.ak, 0, 0))
 								]));
 					}
 				}
@@ -9461,7 +9540,7 @@ var rundis$elm_bootstrap$Bootstrap$Dropdown$menuStyles = F2(
 								A2(
 								elm$html$Html$Attributes$style,
 								'transform',
-								A3(translate, -toggleSize.aj, toggleSize._, 0))
+								A3(translate, -toggleSize.ak, toggleSize.aa, 0))
 							]));
 				}
 			}
@@ -9473,13 +9552,13 @@ var rundis$elm_bootstrap$Bootstrap$Dropdown$menuStyles = F2(
 					A2(
 					elm$html$Html$Attributes$style,
 					'transform',
-					A3(translate, -toggleSize.aj, -menuSize._, 0))
+					A3(translate, -toggleSize.ak, -menuSize.aa, 0))
 				]));
 	});
 var rundis$elm_bootstrap$Bootstrap$Dropdown$dropdownMenu = F3(
 	function (state, config, items) {
 		var status = state.q;
-		var menuSize = state.av;
+		var menuSize = state.aw;
 		var wrapperStyles = (status === 2) ? _List_fromArray(
 			[
 				A2(elm$html$Html$Attributes$style, 'height', '0'),
@@ -9529,7 +9608,7 @@ var rundis$elm_bootstrap$Bootstrap$Dropdown$applyModifier = F2(
 			case 0:
 				return _Utils_update(
 					options,
-					{as: true});
+					{at: true});
 			case 4:
 				var attrs_ = option.a;
 				return _Utils_update(
@@ -9540,7 +9619,7 @@ var rundis$elm_bootstrap$Bootstrap$Dropdown$applyModifier = F2(
 				return _Utils_update(
 					options,
 					{
-						an: elm$core$Maybe$Just(dir)
+						ao: elm$core$Maybe$Just(dir)
 					});
 			default:
 				var attrs_ = option.a;
@@ -9549,7 +9628,7 @@ var rundis$elm_bootstrap$Bootstrap$Dropdown$applyModifier = F2(
 					{bh: attrs_});
 		}
 	});
-var rundis$elm_bootstrap$Bootstrap$Dropdown$defaultOptions = {aV: _List_Nil, an: elm$core$Maybe$Nothing, bb: false, as: false, bh: _List_Nil};
+var rundis$elm_bootstrap$Bootstrap$Dropdown$defaultOptions = {aV: _List_Nil, ao: elm$core$Maybe$Nothing, bb: false, at: false, bh: _List_Nil};
 var rundis$elm_bootstrap$Bootstrap$Dropdown$toConfig = function (options) {
 	return A3(elm$core$List$foldl, rundis$elm_bootstrap$Bootstrap$Dropdown$applyModifier, rundis$elm_bootstrap$Bootstrap$Dropdown$defaultOptions, options);
 };
@@ -9662,7 +9741,7 @@ var rundis$elm_bootstrap$Bootstrap$Dropdown$clickHandler = F2(
 				return elm$json$Json$Decode$succeed(
 					toMsg(
 						{
-							av: m,
+							aw: m,
 							q: rundis$elm_bootstrap$Bootstrap$Dropdown$nextStatus(status),
 							bT: b
 						}));
@@ -10549,7 +10628,7 @@ var rundis$elm_bootstrap$Bootstrap$Grid$Internal$orderToAttributes = function (o
 	var order_ = function (m) {
 		if (!m.$) {
 			var screenSize = m.a.dk;
-			var moveCount = m.a.ae;
+			var moveCount = m.a.af;
 			return elm$core$Maybe$Just(
 				elm$html$Html$Attributes$class(
 					'order' + (rundis$elm_bootstrap$Bootstrap$Grid$Internal$screenSizeToPartialString(screenSize) + rundis$elm_bootstrap$Bootstrap$Grid$Internal$orderColOption(moveCount))));
@@ -10596,7 +10675,7 @@ var rundis$elm_bootstrap$Bootstrap$Grid$Internal$pullsToAttributes = function (p
 	var pull_ = function (m) {
 		if (!m.$) {
 			var screenSize = m.a.dk;
-			var moveCount = m.a.ae;
+			var moveCount = m.a.af;
 			return elm$core$Maybe$Just(
 				elm$html$Html$Attributes$class(
 					'pull' + (rundis$elm_bootstrap$Bootstrap$Grid$Internal$screenSizeToPartialString(screenSize) + rundis$elm_bootstrap$Bootstrap$Grid$Internal$moveCountOption(moveCount))));
@@ -10613,7 +10692,7 @@ var rundis$elm_bootstrap$Bootstrap$Grid$Internal$pushesToAttributes = function (
 	var push_ = function (m) {
 		if (!m.$) {
 			var screenSize = m.a.dk;
-			var moveCount = m.a.ae;
+			var moveCount = m.a.af;
 			return elm$core$Maybe$Just(
 				elm$html$Html$Attributes$class(
 					'push' + (rundis$elm_bootstrap$Bootstrap$Grid$Internal$screenSizeToPartialString(screenSize) + rundis$elm_bootstrap$Bootstrap$Grid$Internal$moveCountOption(moveCount))));
@@ -10963,7 +11042,7 @@ var author$project$Main$viewOfMainTabItem = function (model) {
 															[
 																rundis$elm_bootstrap$Bootstrap$Form$Textarea$rows(15),
 																rundis$elm_bootstrap$Bootstrap$Form$Textarea$onInput(author$project$Main$ChangeProgramContent),
-																rundis$elm_bootstrap$Bootstrap$Form$Textarea$value(model.O)
+																rundis$elm_bootstrap$Bootstrap$Form$Textarea$value(model.P)
 															])))
 												]),
 											A3(
@@ -10988,7 +11067,7 @@ var author$project$Main$viewOfMainTabItem = function (model) {
 																	[rundis$elm_bootstrap$Bootstrap$Button$primary, rundis$elm_bootstrap$Bootstrap$Button$small]),
 																_List_fromArray(
 																	[
-																		elm$html$Html$text(model.C.Q.b)
+																		elm$html$Html$text(model.C.R.b)
 																	])),
 															dt: A2(elm$core$Basics$composeL, author$project$Main$UpdateParserTokenTableState, author$project$Main$UpdateTokenTableDropdownState)
 														})
@@ -11222,7 +11301,7 @@ var author$project$Main$viewOfMainTabItem = function (model) {
 																					[rundis$elm_bootstrap$Bootstrap$Button$primary, rundis$elm_bootstrap$Bootstrap$Button$small]),
 																				_List_fromArray(
 																					[
-																						elm$html$Html$text(model.z.Q.b)
+																						elm$html$Html$text(model.z.R.b)
 																					])),
 																			dt: A2(elm$core$Basics$composeL, author$project$Main$UpdateDisplayTokenTableState, author$project$Main$UpdateTokenTableDropdownState)
 																		})
@@ -11241,7 +11320,7 @@ var author$project$Main$viewOfMainTabItem = function (model) {
 																			[
 																				A3(
 																				rundis$elm_bootstrap$Bootstrap$ButtonGroup$radioButton,
-																				model.X,
+																				model.Y,
 																				_List_fromArray(
 																					[
 																						rundis$elm_bootstrap$Bootstrap$Button$primary,
@@ -11254,7 +11333,7 @@ var author$project$Main$viewOfMainTabItem = function (model) {
 																					])),
 																				A3(
 																				rundis$elm_bootstrap$Bootstrap$ButtonGroup$radioButton,
-																				!model.X,
+																				!model.Y,
 																				_List_fromArray(
 																					[
 																						rundis$elm_bootstrap$Bootstrap$Button$primary,
@@ -11348,7 +11427,7 @@ var author$project$Main$viewOfMainTabItem = function (model) {
 																			[
 																				A3(
 																				rundis$elm_bootstrap$Bootstrap$ButtonGroup$radioButton,
-																				!model.P,
+																				!model.Q,
 																				_List_fromArray(
 																					[
 																						rundis$elm_bootstrap$Bootstrap$Button$primary,
@@ -11361,7 +11440,7 @@ var author$project$Main$viewOfMainTabItem = function (model) {
 																					])),
 																				A3(
 																				rundis$elm_bootstrap$Bootstrap$ButtonGroup$radioButton,
-																				model.P === 1,
+																				model.Q === 1,
 																				_List_fromArray(
 																					[
 																						rundis$elm_bootstrap$Bootstrap$Button$primary,
@@ -11374,7 +11453,7 @@ var author$project$Main$viewOfMainTabItem = function (model) {
 																					])),
 																				A3(
 																				rundis$elm_bootstrap$Bootstrap$ButtonGroup$radioButton,
-																				model.P === 2,
+																				model.Q === 2,
 																				_List_fromArray(
 																					[
 																						rundis$elm_bootstrap$Bootstrap$Button$primary,
@@ -11501,7 +11580,7 @@ var rundis$elm_bootstrap$Bootstrap$Grid$containerFluid = F2(
 var rundis$elm_bootstrap$Bootstrap$Grid$Col$sm = A2(rundis$elm_bootstrap$Bootstrap$Grid$Internal$width, 1, 0);
 var rundis$elm_bootstrap$Bootstrap$Tab$Config = elm$core$Basics$identity;
 var rundis$elm_bootstrap$Bootstrap$Tab$config = function (toMsg) {
-	return {aV: _List_Nil, ac: false, cT: _List_Nil, ad: elm$core$Maybe$Nothing, cr: toMsg, bV: false, T: false};
+	return {aV: _List_Nil, ad: false, cT: _List_Nil, ae: elm$core$Maybe$Nothing, cr: toMsg, bV: false, U: false};
 };
 var rundis$elm_bootstrap$Bootstrap$Tab$items = F2(
 	function (items_, _n0) {
@@ -11575,7 +11654,7 @@ var rundis$elm_bootstrap$Bootstrap$Tab$renderLink = F4(
 			configRec.cr(
 				{
 					aN: elm$core$Maybe$Just(id),
-					k: A2(rundis$elm_bootstrap$Bootstrap$Tab$visibilityTransition, configRec.T && (!active), 0)
+					k: A2(rundis$elm_bootstrap$Bootstrap$Tab$visibilityTransition, configRec.U && (!active), 0)
 				}));
 		var linkItem = configRec.bV ? A2(
 			elm$html$Html$a,
@@ -11676,13 +11755,13 @@ var rundis$elm_bootstrap$Bootstrap$Tab$tabAttributes = function (configRec) {
 				_List_fromArray(
 					[
 						_Utils_Tuple2('nav', true),
-						_Utils_Tuple2('nav-tabs', !configRec.ac),
-						_Utils_Tuple2('nav-pills', configRec.ac)
+						_Utils_Tuple2('nav-tabs', !configRec.ad),
+						_Utils_Tuple2('nav-pills', configRec.ad)
 					]))
 			]),
 		_Utils_ap(
 			function () {
-				var _n0 = configRec.ad;
+				var _n0 = configRec.ae;
 				if (!_n0.$) {
 					switch (_n0.a) {
 						case 3:
