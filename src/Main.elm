@@ -320,7 +320,8 @@ viewOfMainTabItem model =
                     [ Grid.col [ Col.lg6 ]
                         [ Card.config []
                             |> Card.header []
-                                [ Dropdown.dropdown
+                                [ text "Program Input : Parse as "
+                                , Dropdown.dropdown
                                     model.parserTokenTableState.dropdownState
                                     { options = []
                                     , toggleMsg = UpdateParserTokenTableState << UpdateTokenTableDropdownState
@@ -345,7 +346,7 @@ viewOfMainTabItem model =
                             |> Card.header []
                                 [ Grid.row []
                                     [ Grid.col []
-                                        [ text "Parsed commands by: "
+                                        [ text "Parsed Program : Display as "
                                         , Dropdown.dropdown
                                             model.displayTokenTableState.dropdownState
                                             { options = []

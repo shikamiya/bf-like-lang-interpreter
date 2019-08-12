@@ -9961,6 +9961,7 @@ var author$project$Main$viewOfMainTabItem = function (model) {
 												_List_Nil,
 												_List_fromArray(
 													[
+														elm$html$Html$text('Program Input : Parse as '),
 														A2(
 														rundis$elm_bootstrap$Bootstrap$Dropdown$dropdown,
 														model.C.I,
@@ -10017,7 +10018,7 @@ var author$project$Main$viewOfMainTabItem = function (model) {
 																_List_Nil,
 																_List_fromArray(
 																	[
-																		elm$html$Html$text('Parsed commands by: '),
+																		elm$html$Html$text('Parsed Program : Display as '),
 																		A2(
 																		rundis$elm_bootstrap$Bootstrap$Dropdown$dropdown,
 																		model.z.I,
