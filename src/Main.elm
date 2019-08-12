@@ -1,9 +1,9 @@
 module Main exposing (main)
 
 import Array exposing (Array)
-import BFExecutor exposing (getMaybeTapeValue, runBFCommandByStep, runBFCommands)
+import BFExecutor exposing (getMaybeTapeValue, runBFCommands)
 import BFParser exposing (parseTokens)
-import BFTypes exposing (BFCommand(..), BFParseError(..), BFRunningState, BFTape(..), BFToken, BFTokenKind(..), BFTokenTable, bfParseErrorToString, initialRunningState, tapePages, tapeSize, tokenKindToString)
+import BFTypes exposing (BFCommand(..), BFExecutorParams, BFParseError(..), BFTape(..), BFToken, BFTokenKind(..), BFTokenTable, RunningState(..), bfParseErrorToString, initialExecutorParams, tapePages, tapeSize, tokenKindToString)
 import Bootstrap.Button as Button
 import Bootstrap.ButtonGroup as ButtonGroup
 import Bootstrap.CDN
@@ -126,32 +126,23 @@ initialTokenTableState =
     }
 
 
-type BFRunningStateMsg
+type BFExecutorParamsMsg
     = UpdateTokens (Array BFCommand)
     | UpdateInput String
-    | ChangeCurrentTapePage
     | UpdateCurrentTapePage Int
     | ResetAll
-    | ResetRunnningState
-    | Run
-    | StepRun
+    | ExecuteWithNewRunningState RunningState
+    | StopExecution
 
 
-updateRunningState : BFRunningStateMsg -> BFRunningState -> BFRunningState
-updateRunningState msg state =
+updateExecutorParams : BFExecutorParamsMsg -> BFExecutorParams -> BFExecutorParams
+updateExecutorParams msg state =
     case msg of
         UpdateTokens commands ->
             { state | commands = commands }
 
         UpdateInput input ->
             { state | input = input }
-
-        ChangeCurrentTapePage ->
-            let
-                currentPage =
-                    state.tapePointer // (16 * 16)
-            in
-            updateRunningState (UpdateCurrentTapePage currentPage) state
 
         UpdateCurrentTapePage page ->
             let
@@ -161,21 +152,13 @@ updateRunningState msg state =
             { state | currentTapePage = newPage }
 
         ResetAll ->
-            initialRunningState
+            initialExecutorParams
 
-        ResetRunnningState ->
-            { initialRunningState | commands = state.commands, input = state.input }
+        ExecuteWithNewRunningState runningState ->
+            runBFCommands { state | runningState = runningState }
 
-        Run ->
-            let
-                initState =
-                    updateRunningState ResetRunnningState state
-            in
-            runBFCommands initState
-                |> updateRunningState ChangeCurrentTapePage
-
-        StepRun ->
-            runBFCommandByStep state
+        StopExecution ->
+            { initialExecutorParams | commands = state.commands, input = state.input }
 
 
 
@@ -190,7 +173,7 @@ type alias Model =
     , showBFTapeAs : ShowBFTapeAs
     , parserTokenTableState : TokenTableState
     , displayTokenTableState : TokenTableState
-    , runningState : BFRunningState
+    , executorParams : BFExecutorParams
     }
 
 
@@ -217,7 +200,7 @@ initialModel =
     , showBFTapeAs = ShowBFTapeAsInt
     , parserTokenTableState = initialTokenTableState
     , displayTokenTableState = initialTokenTableState
-    , runningState = initialRunningState
+    , executorParams = initialExecutorParams
     }
 
 
@@ -269,7 +252,7 @@ type Msg
     | UpdateParserTokenTableState TokenTableStateMsg
     | UpdateDisplayTokenTableState TokenTableStateMsg
     | ParseTokens
-    | UpdateRunningState BFRunningStateMsg
+    | UpdateExecutorParams BFExecutorParamsMsg
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -335,18 +318,18 @@ update msg model =
             let
                 commands =
                     parseTokens model.parserTokenTableState.tokenTable model.programContent
-                        |> Result.withDefault model.runningState.commands
+                        |> Result.withDefault model.executorParams.commands
             in
-            update (UpdateRunningState <| UpdateTokens commands) model
+            update (UpdateExecutorParams <| UpdateTokens commands) model
                 |> Tuple.first
                 |> withCmdNone
 
-        UpdateRunningState runningStateMsg ->
+        UpdateExecutorParams executorParamsMsg ->
             let
                 state =
-                    updateRunningState runningStateMsg model.runningState
+                    updateExecutorParams executorParamsMsg model.executorParams
             in
-            { model | runningState = state }
+            { model | executorParams = state }
                 |> withCmdNone
 
 
@@ -414,8 +397,8 @@ viewOfMainTabItem model =
                                         [ Block.custom <|
                                             Textarea.textarea
                                                 [ Textarea.rows 5
-                                                , Textarea.onInput (UpdateRunningState << UpdateInput)
-                                                , Textarea.value model.runningState.input
+                                                , Textarea.onInput (UpdateExecutorParams << UpdateInput)
+                                                , Textarea.value model.executorParams.input
                                                 ]
                                         ]
                                     |> Card.view
@@ -427,7 +410,7 @@ viewOfMainTabItem model =
                                     |> Card.header [] [ text "Output" ]
                                     |> Card.block []
                                         [ Html.p []
-                                            (model.runningState.output
+                                            (model.executorParams.output
                                                 |> List.reverse
                                                 |> List.map String.fromChar
                                                 |> List.map
@@ -438,7 +421,7 @@ viewOfMainTabItem model =
                                                         else
                                                             text str
                                                     )
-                                                |> (\x -> List.append x [ Html.span [ Html.Attributes.class "text-danger" ] [ text <| Maybe.withDefault "" model.runningState.error ] ])
+                                                |> (\x -> List.append x [ Html.span [ Html.Attributes.class "text-danger" ] [ text <| Maybe.withDefault "" model.executorParams.error ] ])
                                             )
                                             |> Block.custom
                                         ]
@@ -449,10 +432,12 @@ viewOfMainTabItem model =
                     ]
                 , Grid.row [ Row.attrs [ Html.Attributes.class "my-3" ] ]
                     [ Grid.col []
-                        [ Button.button [ Button.onClick (UpdateRunningState Run) ] [ text "RunFromStart" ]
-                        , Button.button [ Button.onClick (UpdateRunningState StepRun) ] [ text "StepRun" ]
-                        , Button.button [ Button.onClick (UpdateRunningState ResetAll) ] [ text "ResetAll" ]
-                        , Button.button [ Button.onClick (UpdateRunningState ResetRunnningState) ] [ text "ResetStepRunPosition" ]
+                        [ Button.button [ Button.onClick (UpdateExecutorParams <| ExecuteWithNewRunningState Running) ] [ text "Run" ]
+                        , Button.button [ Button.onClick (UpdateExecutorParams <| ExecuteWithNewRunningState RunningStep) ] [ text "StepRun" ]
+                        , Button.button [ Button.onClick (UpdateExecutorParams <| ExecuteWithNewRunningState RunningUntilEndingLoop) ] [ text "SkipLoopOnce" ]
+                        , Button.button [ Button.onClick (UpdateExecutorParams <| ExecuteWithNewRunningState RunningUntilLeavingLoop) ] [ text "SkipEntireLoop" ]
+                        , Button.button [ Button.onClick (UpdateExecutorParams StopExecution) ] [ text "ResetStepRunPosition" ]
+                        , Button.button [ Button.onClick (UpdateExecutorParams ResetAll) ] [ text "ResetAll(No Confirmation and Can't be undone)" ]
                         ]
                     ]
                 , Grid.row []
@@ -488,7 +473,7 @@ viewOfMainTabItem model =
                                     ]
                                 ]
                             |> Card.block []
-                                [ viewOfBFCommands model [] model.runningState.commands
+                                [ viewOfBFCommands model [] model.executorParams.commands
                                     |> Html.p []
                                     |> Block.custom
                                 ]
@@ -518,13 +503,13 @@ viewOfMainTabItem model =
                                         ]
                                     , Grid.col [ Col.sm4, Col.lg3 ]
                                         [ InputGroup.config
-                                            (InputGroup.text [ Input.value <| String.fromInt model.runningState.currentTapePage, Input.onInput (String.toInt >> Maybe.withDefault 0 >> UpdateCurrentTapePage >> UpdateRunningState) ])
+                                            (InputGroup.text [ Input.value <| String.fromInt model.executorParams.currentTapePage, Input.onInput (String.toInt >> Maybe.withDefault 0 >> UpdateCurrentTapePage >> UpdateExecutorParams) ])
                                             |> InputGroup.small
                                             |> InputGroup.predecessors
-                                                [ InputGroup.button [ Button.secondary, Button.onClick <| UpdateRunningState <| UpdateCurrentTapePage <| model.runningState.currentTapePage - 1 ] [ text "<" ] ]
+                                                [ InputGroup.button [ Button.secondary, Button.onClick <| UpdateExecutorParams <| UpdateCurrentTapePage <| model.executorParams.currentTapePage - 1 ] [ text "<" ] ]
                                             |> InputGroup.successors
                                                 [ InputGroup.span [] [ text "/ ", text <| String.fromInt <| tapePages - 1 ]
-                                                , InputGroup.button [ Button.secondary, Button.onClick <| UpdateRunningState <| UpdateCurrentTapePage <| model.runningState.currentTapePage + 1 ] [ text ">" ]
+                                                , InputGroup.button [ Button.secondary, Button.onClick <| UpdateExecutorParams <| UpdateCurrentTapePage <| model.executorParams.currentTapePage + 1 ] [ text ">" ]
                                                 ]
                                             |> InputGroup.view
                                         ]
@@ -536,7 +521,7 @@ viewOfMainTabItem model =
                                         (\idx ->
                                             let
                                                 line =
-                                                    model.runningState.currentTapePage * 16 + idx
+                                                    model.executorParams.currentTapePage * 16 + idx
                                             in
                                             Grid.row []
                                                 [ Grid.col []
@@ -581,7 +566,7 @@ tableViewOfTapeLine model line =
                             16 * line + idx
 
                         isCurrentAddress =
-                            model.runningState.tapePointer == address
+                            model.executorParams.tapePointer == address
 
                         addressStr =
                             if address < tapeSize then
@@ -602,7 +587,7 @@ tableViewOfTapeLine model line =
                             16 * line + idx
 
                         value =
-                            getMaybeTapeValue model.runningState.tape address
+                            getMaybeTapeValue model.executorParams.tape address
                                 |> Maybe.map (convertTapeValue model.showBFTapeAs)
                                 |> Maybe.withDefault ""
                     in
@@ -684,7 +669,7 @@ viewOfBFCommand : Model -> List Int -> BFCommand -> List (Html Msg)
 viewOfBFCommand model pos cmd =
     let
         isCurrentCommand =
-            model.runningState.currentIndices == pos
+            model.executorParams.currentIndices == pos
 
         isCurrentPopoverCommand =
             model.commandPopoverState.popoverIndices == pos

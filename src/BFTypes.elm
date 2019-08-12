@@ -1,4 +1,4 @@
-module BFTypes exposing (BFCommand(..), BFParseError(..), BFRunningState, BFTape(..), BFToken, BFTokenKind(..), BFTokenTable, bfParseErrorToString, extractBFTape, initialBFTape, initialRunningState, tapePages, tapeSize, tokenKindToString)
+module BFTypes exposing (BFCommand(..), BFExecutorParams, BFParseError(..), BFTape(..), BFToken, BFTokenKind(..), BFTokenTable, PreCommand(..), RunningState(..), bfParseErrorToString, extractBFTape, initialBFTape, initialExecutorParams, tapePages, tapeSize, tokenKindToString)
 
 import Array exposing (Array)
 
@@ -36,8 +36,26 @@ type BFParseError
     | InsufficientLoopEnd
 
 
-type alias BFRunningState =
-    { commands : Array BFCommand
+type RunningState
+    = NotRunning
+    | Running
+    | RunningSlowly
+    | RunningStep
+    | RunningUntilEndingLoop
+    | RunningUntilLeavingLoop
+    | Pausing
+
+
+type PreCommand
+    = NextCommand
+    | ContinueLoop
+    | LeaveLoop
+
+
+type alias BFExecutorParams =
+    { runningState : RunningState
+    , nextPreCommand : PreCommand
+    , commands : Array BFCommand
     , currentIndices : List Int
     , tape : BFTape
     , tapePointer : Int
@@ -63,9 +81,11 @@ bfParseErrorToString error =
             "Loop End should be here"
 
 
-initialRunningState : BFRunningState
-initialRunningState =
-    { commands = Array.fromList []
+initialExecutorParams : BFExecutorParams
+initialExecutorParams =
+    { runningState = NotRunning
+    , nextPreCommand = NextCommand
+    , commands = Array.fromList []
     , currentIndices = []
     , tape = initialBFTape
     , tapePointer = 0
