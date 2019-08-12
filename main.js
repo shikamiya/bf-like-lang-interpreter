@@ -6273,8 +6273,147 @@ var elm$core$Platform$Cmd$none = elm$core$Platform$Cmd$batch(_List_Nil);
 var author$project$Main$withCmdNone = function (model) {
 	return _Utils_Tuple2(model, elm$core$Platform$Cmd$none);
 };
-var elm$core$Task$Perform = elm$core$Basics$identity;
+var author$project$Main$update = F2(
+	function (msg, model) {
+		switch (msg.$) {
+			case 0:
+				var programContent = msg.a;
+				return author$project$Main$withCacheCmd(
+					A2(
+						author$project$Main$update,
+						author$project$Main$ParseTokens,
+						A2(
+							author$project$Main$update,
+							author$project$Main$UpdateProgramContent(programContent),
+							model).a).a);
+			case 1:
+				var programContent = msg.a;
+				return author$project$Main$withCacheCmd(
+					_Utils_update(
+						model,
+						{P: programContent}));
+			case 2:
+				var state = msg.a;
+				return author$project$Main$withCmdNone(
+					_Utils_update(
+						model,
+						{bR: state}));
+			case 3:
+				var visibility = msg.a;
+				return author$project$Main$withCmdNone(
+					_Utils_update(
+						model,
+						{Y: visibility}));
+			case 4:
+				var state = msg.a;
+				return author$project$Main$withCmdNone(
+					_Utils_update(
+						model,
+						{O: state}));
+			case 5:
+				var pos = msg.a;
+				var state = msg.b;
+				return author$project$Main$withCmdNone(
+					A2(
+						author$project$Main$update,
+						author$project$Main$UpdatePopoverState(state),
+						A2(
+							author$project$Main$update,
+							author$project$Main$UpdateRunningState(
+								author$project$Main$UpdatePopoverIndices(pos)),
+							model).a).a);
+			case 6:
+				var state = msg.a;
+				return author$project$Main$withCmdNone(
+					_Utils_update(
+						model,
+						{Q: state}));
+			case 7:
+				var tokenTableStateMsg = msg.a;
+				var state = A2(author$project$Main$updateTokenTableState, tokenTableStateMsg, model.C);
+				return author$project$Main$withCmdNone(
+					A2(
+						author$project$Main$update,
+						author$project$Main$ParseTokens,
+						_Utils_update(
+							model,
+							{C: state})).a);
+			case 8:
+				var tokenTableStateMsg = msg.a;
+				var state = A2(author$project$Main$updateTokenTableState, tokenTableStateMsg, model.z);
+				return author$project$Main$withCmdNone(
+					_Utils_update(
+						model,
+						{z: state}));
+			case 9:
+				var commands = A2(
+					elm$core$Result$withDefault,
+					model.i.cC,
+					A2(author$project$BFParser$parseTokens, model.C.R, model.P));
+				return author$project$Main$withCmdNone(
+					A2(
+						author$project$Main$update,
+						author$project$Main$UpdateRunningState(
+							author$project$Main$UpdateTokens(commands)),
+						model).a);
+			default:
+				var runningStateMsg = msg.a;
+				var state = A2(author$project$Main$updateRunningState, runningStateMsg, model.i);
+				return author$project$Main$withCmdNone(
+					_Utils_update(
+						model,
+						{i: state}));
+		}
+	});
+var author$project$Main$init = function (flags) {
+	return author$project$Main$withCmdNone(
+		A2(
+			author$project$Main$update,
+			author$project$Main$ParseTokens,
+			author$project$Main$decodeModel(flags)).a);
+};
+var author$project$Main$UpdateDisplayTokenTableState = function (a) {
+	return {$: 8, a: a};
+};
+var author$project$Main$UpdateParserTokenTableState = function (a) {
+	return {$: 7, a: a};
+};
+var author$project$Main$UpdateTokenTableDropdownState = function (a) {
+	return {$: 0, a: a};
+};
+var elm$core$Basics$composeL = F3(
+	function (g, f, x) {
+		return g(
+			f(x));
+	});
+var elm$core$Platform$Sub$batch = _Platform_batch;
+var elm$browser$Browser$AnimationManager$Time = function (a) {
+	return {$: 0, a: a};
+};
+var elm$browser$Browser$AnimationManager$State = F3(
+	function (subs, request, oldTime) {
+		return {cg: oldTime, df: request, dn: subs};
+	});
 var elm$core$Task$succeed = _Scheduler_succeed;
+var elm$browser$Browser$AnimationManager$init = elm$core$Task$succeed(
+	A3(elm$browser$Browser$AnimationManager$State, _List_Nil, elm$core$Maybe$Nothing, 0));
+var elm$browser$Browser$External = function (a) {
+	return {$: 1, a: a};
+};
+var elm$browser$Browser$Internal = function (a) {
+	return {$: 0, a: a};
+};
+var elm$browser$Browser$Dom$NotFound = elm$core$Basics$identity;
+var elm$core$Basics$never = function (_n0) {
+	never:
+	while (true) {
+		var nvr = _n0;
+		var $temp$_n0 = nvr;
+		_n0 = $temp$_n0;
+		continue never;
+	}
+};
+var elm$core$Task$Perform = elm$core$Basics$identity;
 var elm$core$Task$init = elm$core$Task$succeed(0);
 var elm$core$Task$andThen = _Scheduler_andThen;
 var elm$core$Task$map = F2(
@@ -6348,151 +6487,6 @@ var elm$core$Task$perform = F2(
 		return elm$core$Task$command(
 			A2(elm$core$Task$map, toMessage, task));
 	});
-var author$project$Main$update = F2(
-	function (msg, model) {
-		switch (msg.$) {
-			case 0:
-				var programContent = msg.a;
-				return author$project$Main$withCacheCmd(
-					A2(
-						author$project$Main$update,
-						author$project$Main$ParseTokens,
-						A2(
-							author$project$Main$update,
-							author$project$Main$UpdateProgramContent(programContent),
-							model).a).a);
-			case 1:
-				var programContent = msg.a;
-				return author$project$Main$withCacheCmd(
-					_Utils_update(
-						model,
-						{P: programContent}));
-			case 2:
-				var state = msg.a;
-				return author$project$Main$withCmdNone(
-					_Utils_update(
-						model,
-						{bR: state}));
-			case 3:
-				var visibility = msg.a;
-				return author$project$Main$withCmdNone(
-					_Utils_update(
-						model,
-						{Y: visibility}));
-			case 4:
-				var state = msg.a;
-				return author$project$Main$withCmdNone(
-					_Utils_update(
-						model,
-						{O: state}));
-			case 5:
-				var pos = msg.a;
-				var state = msg.b;
-				return _Utils_Tuple2(
-					A2(
-						author$project$Main$update,
-						author$project$Main$UpdateRunningState(
-							author$project$Main$UpdatePopoverIndices(pos)),
-						model).a,
-					elm$core$Platform$Cmd$batch(
-						_List_fromArray(
-							[
-								A2(
-								elm$core$Task$perform,
-								elm$core$Basics$always(
-									author$project$Main$UpdatePopoverState(state)),
-								elm$core$Task$succeed(0))
-							])));
-			case 6:
-				var state = msg.a;
-				return author$project$Main$withCmdNone(
-					_Utils_update(
-						model,
-						{Q: state}));
-			case 7:
-				var tokenTableStateMsg = msg.a;
-				var state = A2(author$project$Main$updateTokenTableState, tokenTableStateMsg, model.C);
-				return author$project$Main$withCmdNone(
-					A2(
-						author$project$Main$update,
-						author$project$Main$ParseTokens,
-						_Utils_update(
-							model,
-							{C: state})).a);
-			case 8:
-				var tokenTableStateMsg = msg.a;
-				var state = A2(author$project$Main$updateTokenTableState, tokenTableStateMsg, model.z);
-				return author$project$Main$withCmdNone(
-					_Utils_update(
-						model,
-						{z: state}));
-			case 9:
-				var commands = A2(
-					elm$core$Result$withDefault,
-					model.i.cC,
-					A2(author$project$BFParser$parseTokens, model.C.R, model.P));
-				return author$project$Main$withCmdNone(
-					A2(
-						author$project$Main$update,
-						author$project$Main$UpdateRunningState(
-							author$project$Main$UpdateTokens(commands)),
-						model).a);
-			default:
-				var runningStateMsg = msg.a;
-				var state = A2(author$project$Main$updateRunningState, runningStateMsg, model.i);
-				return author$project$Main$withCmdNone(
-					_Utils_update(
-						model,
-						{i: state}));
-		}
-	});
-var author$project$Main$init = function (flags) {
-	return author$project$Main$withCmdNone(
-		A2(
-			author$project$Main$update,
-			author$project$Main$ParseTokens,
-			author$project$Main$decodeModel(flags)).a);
-};
-var author$project$Main$UpdateDisplayTokenTableState = function (a) {
-	return {$: 8, a: a};
-};
-var author$project$Main$UpdateParserTokenTableState = function (a) {
-	return {$: 7, a: a};
-};
-var author$project$Main$UpdateTokenTableDropdownState = function (a) {
-	return {$: 0, a: a};
-};
-var elm$core$Basics$composeL = F3(
-	function (g, f, x) {
-		return g(
-			f(x));
-	});
-var elm$core$Platform$Sub$batch = _Platform_batch;
-var elm$browser$Browser$AnimationManager$Time = function (a) {
-	return {$: 0, a: a};
-};
-var elm$browser$Browser$AnimationManager$State = F3(
-	function (subs, request, oldTime) {
-		return {cg: oldTime, df: request, dn: subs};
-	});
-var elm$browser$Browser$AnimationManager$init = elm$core$Task$succeed(
-	A3(elm$browser$Browser$AnimationManager$State, _List_Nil, elm$core$Maybe$Nothing, 0));
-var elm$browser$Browser$External = function (a) {
-	return {$: 1, a: a};
-};
-var elm$browser$Browser$Internal = function (a) {
-	return {$: 0, a: a};
-};
-var elm$browser$Browser$Dom$NotFound = elm$core$Basics$identity;
-var elm$core$Basics$never = function (_n0) {
-	never:
-	while (true) {
-		var nvr = _n0;
-		var $temp$_n0 = nvr;
-		_n0 = $temp$_n0;
-		continue never;
-	}
-};
 var elm$json$Json$Decode$map = _Json_map1;
 var elm$json$Json$Decode$map2 = _Json_map2;
 var elm$json$Json$Decode$succeed = _Json_succeed;

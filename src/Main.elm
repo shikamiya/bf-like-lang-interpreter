@@ -30,7 +30,6 @@ import Json.Encode
 import Language.BF
 import Language.HogyLang
 import Language.Ook
-import Task
 
 
 
@@ -276,7 +275,11 @@ update msg model =
                 |> withCmdNone
 
         ChangePopoverState pos state ->
-            ( update (UpdateRunningState <| UpdatePopoverIndices pos) model |> Tuple.first, Cmd.batch [ Task.perform (always (UpdatePopoverState state)) (Task.succeed ()) ] )
+            update (UpdateRunningState <| UpdatePopoverIndices pos) model
+                |> Tuple.first
+                |> update (UpdatePopoverState state)
+                |> Tuple.first
+                |> withCmdNone
 
         UpdateHowShowBFTapeAs state ->
             { model | showBFTapeAs = state }
