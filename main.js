@@ -11346,7 +11346,7 @@ var author$project$Main$viewOfMainTabItem = function (model) {
 											]),
 										_List_fromArray(
 											[
-												elm$html$Html$text('ResetAll(No Confirmation and Can\'t be undone)')
+												elm$html$Html$text('ResetAll')
 											]))
 									]))
 							])),

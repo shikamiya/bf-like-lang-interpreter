@@ -437,7 +437,7 @@ viewOfMainTabItem model =
                         , Button.button [ Button.onClick (UpdateExecutorParams <| ExecuteWithNewRunningState RunningUntilEndingLoop) ] [ text "SkipLoopOnce" ]
                         , Button.button [ Button.onClick (UpdateExecutorParams <| ExecuteWithNewRunningState RunningUntilLeavingLoop) ] [ text "SkipEntireLoop" ]
                         , Button.button [ Button.onClick (UpdateExecutorParams StopExecution) ] [ text "ResetStepRunPosition" ]
-                        , Button.button [ Button.onClick (UpdateExecutorParams ResetAll) ] [ text "ResetAll(No Confirmation and Can't be undone)" ]
+                        , Button.button [ Button.onClick (UpdateExecutorParams ResetAll) ] [ text "ResetAll" ]
                         ]
                     ]
                 , Grid.row []
