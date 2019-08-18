@@ -37,14 +37,8 @@ parseNoOpToken =
 
 
 addCommandIntoList : BFCommandList -> BFCommand -> BFCommandList
-addCommandIntoList list cmd =
-    let
-        (BFCommandList commands) =
-            list
-    in
-    cmd
-        :: commands
-        |> BFCommandList
+addCommandIntoList (BFCommandList commands) cmd =
+    BFCommandList <| cmd :: commands
 
 
 addCommandIntoCurrentList : BFCommandStack -> BFCommand -> BFCommandStack
@@ -64,21 +58,13 @@ addCommandIntoCurrentList stack cmd =
 
 
 reverseCommandList : BFCommandList -> Array BFCommand
-reverseCommandList list =
-    let
-        (BFCommandList commands) =
-            list
-    in
+reverseCommandList (BFCommandList commands) =
     List.reverse commands
         |> Array.fromList
 
 
 beginNewLoopCommand : BFCommandStack -> BFCommand -> BFCommandStack
-beginNewLoopCommand stack cmd =
-    let
-        (BFCommandStack stackList) =
-            stack
-    in
+beginNewLoopCommand (BFCommandStack stackList) cmd =
     BFCommandList (List.singleton cmd)
         :: stackList
         |> BFCommandStack
@@ -109,79 +95,68 @@ parseTokensHelper cmdTable =
                 [ parseTokenByTable cmdTable
                     |> Parser.map
                         (\token ->
-                            let
-                                (BFCommandStack stackList) =
-                                    memo
+                            Parser.Loop <|
+                                case token.kind of
+                                    LoopStart ->
+                                        beginNewLoopCommand memo (BFCommand token)
 
-                                depth =
-                                    List.length stackList
+                                    LoopEnd ->
+                                        if getBFStackLength memo <= 1 then
+                                            BFCommand
+                                                { token
+                                                    | kind = NoOp
+                                                    , error = Just TooManyLoopEnd
+                                                }
+                                                |> addCommandIntoCurrentList memo
 
-                                stack =
-                                    case token.kind of
-                                        LoopStart ->
-                                            beginNewLoopCommand memo (BFCommand token)
+                                        else
+                                            finalizeLoopCommand memo (BFCommand token)
 
-                                        LoopEnd ->
-                                            if depth <= 1 then
-                                                BFCommand
-                                                    { token
-                                                        | kind = NoOp
-                                                        , error = Just TooManyLoopEnd
-                                                    }
-                                                    |> addCommandIntoCurrentList memo
-
-                                            else
-                                                finalizeLoopCommand memo (BFCommand token)
-
-                                        _ ->
-                                            addCommandIntoCurrentList memo (BFCommand token)
-                            in
-                            Parser.Loop stack
+                                    _ ->
+                                        addCommandIntoCurrentList memo (BFCommand token)
                         )
-                , parseNoOpToken
-                    |> Parser.map
-                        (\token ->
-                            let
-                                stack =
-                                    addCommandIntoCurrentList memo (BFCommand token)
-                            in
-                            Parser.Loop stack
-                        )
+                , Parser.map
+                    (Parser.Loop
+                        << addCommandIntoCurrentList memo
+                        << BFCommand
+                    )
+                    parseNoOpToken
                 , Parser.end
                     |> Parser.map
                         (\_ ->
                             let
-                                finalizer list current =
-                                    let
-                                        (BFCommandList commands) =
-                                            current
-
-                                        commandLength =
-                                            List.length commands
-                                    in
-                                    if commandLength == 0 then
-                                        -- first
-                                        list
-
-                                    else
-                                        let
-                                            (BFCommandStack innerStackList) =
-                                                BFCommand (BFToken LoopEnd "(Loop wasn't closed)" <| Just InsufficientLoopEnd)
-                                                    |> finalizeLoopCommand (BFCommandStack [ current, list ])
-                                        in
-                                        List.head innerStackList
-                                            |> Maybe.withDefault (BFCommandList [])
-
                                 (BFCommandStack stackList) =
                                     memo
-
-                                result =
-                                    List.foldl finalizer (BFCommandList []) stackList
                             in
-                            Parser.Done (reverseCommandList result)
+                            Parser.Done (reverseCommandList <| List.foldl finalizer (BFCommandList []) stackList)
                         )
                 ]
         )
+
+
+finalizer : BFCommandList -> BFCommandList -> BFCommandList
+finalizer list current =
+    if getBFCommandListLength current == 0 then
+        list
+
+    else
+        let
+            (BFCommandStack innerStackList) =
+                BFCommand (BFToken LoopEnd "(Loop wasn't closed)" <| Just InsufficientLoopEnd)
+                    |> finalizeLoopCommand (BFCommandStack [ current, list ])
+        in
+        List.head innerStackList
+            |> Maybe.withDefault (BFCommandList [])
+
+
+getBFStackLength : BFCommandStack -> Int
+getBFStackLength (BFCommandStack commands) =
+    List.length commands
+
+
+getBFCommandListLength : BFCommandList -> Int
+getBFCommandListLength (BFCommandList commands) =
+    List.length commands
 
 
 parseTokens : BFTokenTable -> String -> Result (List Parser.DeadEnd) (Array BFCommand)
