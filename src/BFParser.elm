@@ -1,4 +1,4 @@
-module BFParser exposing (parseTokens)
+module BFParser exposing (convertBFCommandsToString, parseTokens)
 
 import Array exposing (Array)
 import BFTypes exposing (BFCommand(..), BFParseError(..), BFTape(..), BFToken, BFTokenKind(..), BFTokenTable)
@@ -162,3 +162,24 @@ getBFCommandListLength (BFCommandList commands) =
 parseTokens : BFTokenTable -> String -> Result (List Parser.DeadEnd) (Array BFCommand)
 parseTokens table =
     Parser.run (parseTokensHelper table)
+
+
+convertBFCommandsToString : BFTokenTable -> Array BFCommand -> String
+convertBFCommandsToString table commands =
+    Array.map (convertBFCommandToString table) commands
+        |> Array.toList
+        |> String.concat
+
+
+convertBFCommandToString : BFTokenTable -> BFCommand -> String
+convertBFCommandToString table command =
+    case command of
+        BFCommand token ->
+            Tuple.first table
+                |> List.filter ((==) token.kind << Tuple.first)
+                |> List.head
+                |> Maybe.withDefault ( NoOp, "" )
+                |> Tuple.second
+
+        BFLoopFunc commands ->
+            convertBFCommandsToString table commands

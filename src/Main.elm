@@ -2,7 +2,7 @@ module Main exposing (main)
 
 import Array exposing (Array)
 import BFExecutor exposing (getMaybeTapeValue, runBFCommands)
-import BFParser exposing (parseTokens)
+import BFParser exposing (convertBFCommandsToString, parseTokens)
 import BFTypes exposing (BFCommand(..), BFExecutorParams, BFParseError(..), BFTape(..), BFToken, BFTokenKind(..), BFTokenTable, RunningState(..), bfParseErrorToString, initialExecutorParams, tapePages, tapeSize, tokenKindToString)
 import Bootstrap.Button as Button
 import Bootstrap.ButtonGroup as ButtonGroup
@@ -247,6 +247,7 @@ type Msg
     | UpdateTabState Tab.State
     | ChangeNoOpCommandVisibility Bool
     | UpdateHowShowBFTapeAs ShowBFTapeAs
+    | CopyConvertedProgram
     | UpdateCommandPopoverState CommandPopoverStateMsg
     | ChangeCommandPopoverState (List Int) Popover.State
     | UpdateParserTokenTableState TokenTableStateMsg
@@ -280,6 +281,9 @@ update msg model =
         UpdateHowShowBFTapeAs state ->
             { model | showBFTapeAs = state }
                 |> withCmdNone
+
+        CopyConvertedProgram ->
+            update (ChangeProgramContent <| convertBFCommandsToString model.displayTokenTableState.tokenTable model.executorParams.commands) model
 
         UpdateCommandPopoverState popoverStateMsg ->
             let
@@ -438,6 +442,7 @@ viewOfMainTabItem model =
                         , Button.button [ Button.onClick (UpdateExecutorParams <| ExecuteWithNewRunningState RunningUntilLeavingLoop) ] [ text "SkipEntireLoop" ]
                         , Button.button [ Button.onClick (UpdateExecutorParams StopExecution) ] [ text "ResetStepRunPosition" ]
                         , Button.button [ Button.onClick (UpdateExecutorParams ResetAll) ] [ text "ResetAll" ]
+                        , Button.button [ Button.onClick CopyConvertedProgram ] [ text "CopyParsedProgramIntoProgramInput" ]
                         ]
                     ]
                 , Grid.row []
