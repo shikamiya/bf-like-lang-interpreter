@@ -27,7 +27,7 @@
     flags: localStorage.getItem(localStorageKey)
   });
   app.ports.cache.subscribe( data => {
-    localStorage.setItem(localStorageKey, JSON.stringify(data));
+    localStorage.setItem(localStorageKey, data);
   });
 </script>
 </body>

@@ -204,10 +204,11 @@ initialModel =
     }
 
 
-encodeModel : Model -> Json.Encode.Value
+encodeModel : Model -> String
 encodeModel model =
-    Json.Encode.object
-        [ ( "programContent", Json.Encode.string model.programContent ) ]
+    Json.Encode.encode 0
+        <| Json.Encode.object
+            [ ( "programContent", Json.Encode.string model.programContent ) ]
 
 
 decodeModel : Json.Decode.Value -> Model
