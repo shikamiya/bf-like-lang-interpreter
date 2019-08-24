@@ -16,6 +16,7 @@ import Bootstrap.Form.Textarea as Textarea
 import Bootstrap.Grid as Grid
 import Bootstrap.Grid.Col as Col
 import Bootstrap.Grid.Row as Row
+import Bootstrap.Modal as Modal
 import Bootstrap.Popover as Popover
 import Bootstrap.Tab as Tab
 import Bootstrap.Table as Table
@@ -36,12 +37,16 @@ import Language.Ook
 -- Config
 
 
-bfTokenTableList : List BFTokenTable
-bfTokenTableList =
+bfDefaultTokenTableList : List BFTokenTable
+bfDefaultTokenTableList =
     [ Language.BF.table
-    , Language.HogyLang.table
     , Language.Ook.table
     ]
+
+
+bfTokenTableList : Model -> List BFTokenTable
+bfTokenTableList model =
+    List.concat [ bfDefaultTokenTableList, model.customTokenTableList ]
 
 
 
@@ -63,6 +68,7 @@ subscriptions model =
     Sub.batch
         [ Dropdown.subscriptions model.parserTokenTableState.dropdownState <| UpdateParserTokenTableState << UpdateTokenTableDropdownState
         , Dropdown.subscriptions model.displayTokenTableState.dropdownState <| UpdateDisplayTokenTableState << UpdateTokenTableDropdownState
+        , Dropdown.subscriptions model.upComingCustomTokenTableDropdown <| UpdateUpComingCustomTokenTableDropdown
         ]
 
 
@@ -161,6 +167,17 @@ updateExecutorParams msg state =
             { initialExecutorParams | commands = state.commands, input = state.input }
 
 
+createTokenTable : Model -> List BFTokenTable
+createTokenTable model =
+    let
+        tokenTable =
+            model.upComingCustomTokenTable
+                |> Array.toList
+    in
+    ( tokenTable, model.upComingCustomTokenTableName )
+        |> List.singleton
+
+
 
 -- Model
 
@@ -169,6 +186,11 @@ type alias Model =
     { programContent : String
     , tabState : Tab.State
     , displayNoOpCommand : Bool
+    , customTokenTableList : List BFTokenTable
+    , addCustomTokenTableModalState : Modal.Visibility
+    , upComingCustomTokenTable : Array ( BFTokenKind, String )
+    , upComingCustomTokenTableName : String
+    , upComingCustomTokenTableDropdown : Dropdown.State
     , commandPopoverState : CommandPopoverState
     , showBFTapeAs : ShowBFTapeAs
     , parserTokenTableState : TokenTableState
@@ -196,6 +218,11 @@ initialModel =
     { programContent = ""
     , tabState = Tab.initialState
     , displayNoOpCommand = True
+    , customTokenTableList = [ Language.HogyLang.table ]
+    , addCustomTokenTableModalState = Modal.hidden
+    , upComingCustomTokenTable = Array.fromList [ ( LoopStart, "[" ), ( LoopEnd, "]" ), ( IncreaseValue, "+" ), ( DecreaseValue, "-" ), ( IncreasePointer, ">" ), ( DecreasePointer, "<" ), ( ReadInput, "," ), ( PrintOutput, "." ) ]
+    , upComingCustomTokenTableName = "New Language"
+    , upComingCustomTokenTableDropdown = Dropdown.initialState
     , commandPopoverState = initialCommandPopoverState
     , showBFTapeAs = ShowBFTapeAsInt
     , parserTokenTableState = initialTokenTableState
@@ -206,8 +233,8 @@ initialModel =
 
 encodeModel : Model -> String
 encodeModel model =
-    Json.Encode.encode 0
-        <| Json.Encode.object
+    Json.Encode.encode 0 <|
+        Json.Encode.object
             [ ( "programContent", Json.Encode.string model.programContent ) ]
 
 
@@ -247,6 +274,13 @@ type Msg
     | UpdateProgramContent String
     | UpdateTabState Tab.State
     | ChangeNoOpCommandVisibility Bool
+    | AddCustomTokenTable
+    | UpdateAddCustomTokenTableModalState Modal.Visibility
+    | UpdateUpComingCustomTokenTable Int String
+    | PushUpComingCustomTokenTable BFTokenKind
+    | RemoveUpComingCustomTokenTable Int
+    | UpdateUpComingCustomTokenTableName String
+    | UpdateUpComingCustomTokenTableDropdown Dropdown.State
     | UpdateHowShowBFTapeAs ShowBFTapeAs
     | CopyConvertedProgram
     | UpdateCommandPopoverState CommandPopoverStateMsg
@@ -277,6 +311,58 @@ update msg model =
 
         ChangeNoOpCommandVisibility visibility ->
             { model | displayNoOpCommand = visibility }
+                |> withCmdNone
+
+        AddCustomTokenTable ->
+            let
+                customTokenTableList =
+                    List.append model.customTokenTableList <| createTokenTable model
+            in
+            { model | customTokenTableList = customTokenTableList }
+                |> update (UpdateAddCustomTokenTableModalState Modal.hidden)
+                |> Tuple.first
+                |> withCmdNone
+
+        UpdateAddCustomTokenTableModalState state ->
+            { model | addCustomTokenTableModalState = state }
+                |> withCmdNone
+
+        UpdateUpComingCustomTokenTable pos value ->
+            let
+                kind =
+                    Array.get pos model.upComingCustomTokenTable
+                        |> Maybe.map Tuple.first
+                        |> Maybe.withDefault NoOp
+
+                upComingCustomTokenTable =
+                    Array.set pos ( kind, value ) model.upComingCustomTokenTable
+            in
+            { model | upComingCustomTokenTable = upComingCustomTokenTable }
+                |> withCmdNone
+
+        PushUpComingCustomTokenTable kind ->
+            let
+                upComingCustomTokenTable =
+                    Array.push ( kind, "" ) model.upComingCustomTokenTable
+            in
+            { model | upComingCustomTokenTable = upComingCustomTokenTable }
+                |> withCmdNone
+
+        RemoveUpComingCustomTokenTable pos ->
+            let
+                upComingCustomTokenTable =
+                    Array.set pos ( NoOp, "" ) model.upComingCustomTokenTable
+                        |> Array.filter (\( kind, _ ) -> kind /= NoOp)
+            in
+            { model | upComingCustomTokenTable = upComingCustomTokenTable }
+                |> withCmdNone
+
+        UpdateUpComingCustomTokenTableName name ->
+            { model | upComingCustomTokenTableName = name }
+                |> withCmdNone
+
+        UpdateUpComingCustomTokenTableDropdown state ->
+            { model | upComingCustomTokenTableDropdown = state }
                 |> withCmdNone
 
         UpdateHowShowBFTapeAs state ->
@@ -380,7 +466,7 @@ viewOfMainTabItem model =
                                     , toggleButton =
                                         Dropdown.toggle [ Button.primary, Button.small ] [ text <| Tuple.second model.parserTokenTableState.tokenTable ]
                                     , items =
-                                        List.map (viewOfBFTokenTableItem <| UpdateParserTokenTableState << UpdateTokenTable) bfTokenTableList
+                                        List.map (viewOfBFTokenTableItem <| UpdateParserTokenTableState << UpdateTokenTable) <| bfTokenTableList model
                                     }
                                 ]
                             |> Card.block []
@@ -444,6 +530,80 @@ viewOfMainTabItem model =
                         , Button.button [ Button.onClick (UpdateExecutorParams StopExecution) ] [ text "ResetStepRunPosition" ]
                         , Button.button [ Button.onClick (UpdateExecutorParams ResetAll) ] [ text "ResetAll" ]
                         , Button.button [ Button.onClick CopyConvertedProgram ] [ text "CopyParsedProgramIntoProgramInput" ]
+                        , Button.button
+                            [ Button.attrs [ Html.Events.onClick <| UpdateAddCustomTokenTableModalState Modal.shown ] ]
+                            [ text "Add new Language" ]
+                        , Modal.config (UpdateAddCustomTokenTableModalState Modal.hidden)
+                            |> Modal.hideOnBackdropClick True
+                            |> Modal.h3 [] [ text "New Language" ]
+                            |> Modal.body []
+                                ((Array.toList <|
+                                    Array.indexedMap
+                                        (\idx ( kind, value ) ->
+                                            Grid.row []
+                                                [ Grid.col []
+                                                    [ InputGroup.config
+                                                        (InputGroup.text
+                                                            [ Input.attrs
+                                                                [ Html.Events.onInput <| UpdateUpComingCustomTokenTable idx
+                                                                , Html.Attributes.value value
+                                                                ]
+                                                            ]
+                                                        )
+                                                        |> InputGroup.predecessors [ InputGroup.span [] [ text <| tokenKindToString kind ] ]
+                                                        |> InputGroup.successors
+                                                            [ InputGroup.button
+                                                                [ Button.danger
+                                                                , Button.attrs [ Html.Events.onClick <| RemoveUpComingCustomTokenTable idx ]
+                                                                ]
+                                                                [ text "Delete" ]
+                                                            ]
+                                                        |> InputGroup.view
+                                                    ]
+                                                ]
+                                        )
+                                        model.upComingCustomTokenTable
+                                 )
+                                    ++ [ Grid.row []
+                                            [ Grid.col []
+                                                [ Dropdown.dropdown
+                                                    model.upComingCustomTokenTableDropdown
+                                                    { options = []
+                                                    , toggleMsg = UpdateUpComingCustomTokenTableDropdown
+                                                    , toggleButton =
+                                                        Dropdown.toggle [ Button.outlineSecondary ] [ text "Add new" ]
+                                                    , items =
+                                                        [ LoopStart, LoopEnd, IncreaseValue, DecreaseValue, IncreasePointer, DecreasePointer, ReadInput, PrintOutput ]
+                                                            |> List.map
+                                                                (\k ->
+                                                                    Dropdown.buttonItem [ Html.Events.onClick <| PushUpComingCustomTokenTable k ] [ text <| tokenKindToString k ]
+                                                                )
+                                                    }
+                                                ]
+                                            ]
+                                       ]
+                                )
+                            |> Modal.footer []
+                                [ InputGroup.config
+                                    (InputGroup.text
+                                        [ Input.attrs
+                                            [ Html.Events.onInput UpdateUpComingCustomTokenTableName
+                                            , Html.Attributes.value model.upComingCustomTokenTableName
+                                            ]
+                                        ]
+                                    )
+                                    |> InputGroup.predecessors
+                                        [ InputGroup.span [] [ text "Language Name" ] ]
+                                    |> InputGroup.successors
+                                        [ InputGroup.button
+                                            [ Button.outlinePrimary
+                                            , Button.attrs [ Html.Events.onClick AddCustomTokenTable ]
+                                            ]
+                                            [ text "Add" ]
+                                        ]
+                                    |> InputGroup.view
+                                ]
+                            |> Modal.view model.addCustomTokenTableModalState
                         ]
                     ]
                 , Grid.row []
@@ -460,7 +620,7 @@ viewOfMainTabItem model =
                                             , toggleButton =
                                                 Dropdown.toggle [ Button.primary, Button.small ] [ text <| Tuple.second model.displayTokenTableState.tokenTable ]
                                             , items =
-                                                List.map (viewOfBFTokenTableItem <| UpdateDisplayTokenTableState << UpdateTokenTable) bfTokenTableList
+                                                List.map (viewOfBFTokenTableItem <| UpdateDisplayTokenTableState << UpdateTokenTable) <| bfTokenTableList model
                                             }
                                         ]
                                     , Grid.col []
