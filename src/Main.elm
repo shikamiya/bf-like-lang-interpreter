@@ -163,7 +163,15 @@ updateExecutorParams msg state =
             { state | currentTapePage = newPage }
 
         ExecuteWithNewRunningState runningState ->
-            runBFCommands { state | runningState = runningState }
+            let
+                newState =
+                    if runningState == Running then
+                        updateExecutorParams StopExecution state
+
+                    else
+                        state
+            in
+            runBFCommands { newState | runningState = runningState }
 
         StopExecution ->
             { initialExecutorParams | commands = state.commands, input = state.input }

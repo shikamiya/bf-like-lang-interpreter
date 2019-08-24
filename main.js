@@ -6526,6 +6526,8 @@ var author$project$BFExecutor$runBFCommands = function (state) {
 		}
 	}
 };
+var author$project$BFTypes$Running = 1;
+var author$project$Main$StopExecution = {$: 4};
 var author$project$Main$updateExecutorParams = F2(
 	function (msg, state) {
 		switch (msg.$) {
@@ -6547,9 +6549,10 @@ var author$project$Main$updateExecutorParams = F2(
 					{c6: newPage});
 			case 3:
 				var runningState = msg.a;
+				var newState = (runningState === 1) ? A2(author$project$Main$updateExecutorParams, author$project$Main$StopExecution, state) : state;
 				return author$project$BFExecutor$runBFCommands(
 					_Utils_update(
-						state,
+						newState,
 						{G: runningState}));
 			default:
 				return _Utils_update(
@@ -8866,7 +8869,6 @@ var author$project$Main$viewOfDebugTabItem = function (_n0) {
 					]))
 		});
 };
-var author$project$BFTypes$Running = 1;
 var author$project$BFTypes$RunningStep = 3;
 var author$project$BFTypes$RunningUntilEndingLoop = 4;
 var author$project$BFTypes$RunningUntilLeavingLoop = 5;
@@ -8909,7 +8911,6 @@ var author$project$Main$RemoveUpComingCustomTokenTable = function (a) {
 var author$project$Main$ResetAll = {$: 13};
 var author$project$Main$ShowBFTapeAsHex = 1;
 var author$project$Main$ShowBFTapeAsStr = 2;
-var author$project$Main$StopExecution = {$: 4};
 var author$project$Main$UpdateCurrentTapePage = function (a) {
 	return {$: 2, a: a};
 };
