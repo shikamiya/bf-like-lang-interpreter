@@ -31,6 +31,7 @@ import Json.Encode as JE
 import Language.BF
 import Language.HogyLang
 import Language.Ook
+import Url
 
 
 
@@ -589,15 +590,13 @@ viewOfMainTabItem model =
                                         [ Html.p []
                                             (model.executorParams.output
                                                 |> List.reverse
-                                                |> List.map String.fromChar
-                                                |> List.map
-                                                    (\str ->
-                                                        if str == "\n" then
-                                                            Html.br [] []
-
-                                                        else
-                                                            text str
-                                                    )
+                                                |> List.map (Char.toCode >> convertCharIntoHexString >> (++) "%")
+                                                |> String.concat
+                                                |> Url.percentDecode
+                                                |> Maybe.withDefault ""
+                                                |> String.split "\n"
+                                                |> List.map text
+                                                |> List.intersperse (Html.br [] [])
                                                 |> (\x -> List.append x [ Html.span [ Html.Attributes.class "text-danger" ] [ text <| Maybe.withDefault "" model.executorParams.error ] ])
                                             )
                                             |> Block.custom

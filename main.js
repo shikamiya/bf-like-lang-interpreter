@@ -4477,7 +4477,24 @@ function _Browser_load(url)
 		}
 	}));
 }
-var author$project$Main$ParseTokens = {$: 19};
+
+
+function _Url_percentEncode(string)
+{
+	return encodeURIComponent(string);
+}
+
+function _Url_percentDecode(string)
+{
+	try
+	{
+		return elm$core$Maybe$Just(decodeURIComponent(string));
+	}
+	catch (e)
+	{
+		return elm$core$Maybe$Nothing;
+	}
+}var author$project$Main$ParseTokens = {$: 19};
 var author$project$BFTypes$NextCommand = 0;
 var author$project$BFTypes$NotRunning = 0;
 var author$project$BFTypes$BFTape = elm$core$Basics$identity;
@@ -9534,6 +9551,24 @@ var elm$core$Basics$composeR = F3(
 		return g(
 			f(x));
 	});
+var elm$core$List$intersperse = F2(
+	function (sep, xs) {
+		if (!xs.b) {
+			return _List_Nil;
+		} else {
+			var hd = xs.a;
+			var tl = xs.b;
+			var step = F2(
+				function (x, rest) {
+					return A2(
+						elm$core$List$cons,
+						sep,
+						A2(elm$core$List$cons, x, rest));
+				});
+			var spersed = A3(elm$core$List$foldr, step, _List_Nil, tl);
+			return A2(elm$core$List$cons, hd, spersed);
+		}
+	});
 var elm$html$Html$p = _VirtualDom_node('p');
 var elm$html$Html$Attributes$value = elm$html$Html$Attributes$stringProperty('value');
 var elm$html$Html$Events$alwaysStop = function (x) {
@@ -9563,6 +9598,7 @@ var elm$html$Html$Events$onInput = function (tagger) {
 			elm$html$Html$Events$alwaysStop,
 			A2(elm$json$Json$Decode$map, tagger, elm$html$Html$Events$targetValue)));
 };
+var elm$url$Url$percentDecode = _Url_percentDecode;
 var rundis$elm_bootstrap$Bootstrap$Internal$Button$Coloring = function (a) {
 	return {$: 1, a: a};
 };
@@ -12124,14 +12160,29 @@ var author$project$Main$viewOfMainTabItem = function (model) {
 																					]));
 																		}(
 																			A2(
-																				elm$core$List$map,
-																				function (str) {
-																					return (str === '\n') ? A2(elm$html$Html$br, _List_Nil, _List_Nil) : elm$html$Html$text(str);
-																				},
+																				elm$core$List$intersperse,
+																				A2(elm$html$Html$br, _List_Nil, _List_Nil),
 																				A2(
 																					elm$core$List$map,
-																					elm$core$String$fromChar,
-																					elm$core$List$reverse(model.f.dC))))))
+																					elm$html$Html$text,
+																					A2(
+																						elm$core$String$split,
+																						'\n',
+																						A2(
+																							elm$core$Maybe$withDefault,
+																							'',
+																							elm$url$Url$percentDecode(
+																								elm$core$String$concat(
+																									A2(
+																										elm$core$List$map,
+																										A2(
+																											elm$core$Basics$composeR,
+																											elm$core$Char$toCode,
+																											A2(
+																												elm$core$Basics$composeR,
+																												author$project$Main$convertCharIntoHexString,
+																												elm$core$Basics$append('%'))),
+																										elm$core$List$reverse(model.f.dC)))))))))))
 																]),
 															A3(
 																rundis$elm_bootstrap$Bootstrap$Card$header,
