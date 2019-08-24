@@ -239,6 +239,7 @@ encodeModel model =
     JE.encode 0 <|
         JE.object
             [ ( "programContent", JE.string model.programContent )
+            , ( "input", JE.string model.executorParams.input )
             , ( "customLanguages"
               , JE.list encodeTokenTable model.customTokenTableList
               )
@@ -256,6 +257,10 @@ decodeModel value =
 
         programContent =
             JD.decodeString (JD.field "programContent" JD.string) cacheStr
+                |> Result.withDefault ""
+
+        input =
+            JD.decodeString (JD.field "input" JD.string) cacheStr
                 |> Result.withDefault ""
 
         customTokenTableList =
@@ -283,6 +288,7 @@ decodeModel value =
         , customTokenTableList = customTokenTableList
         , parserTokenTableState = { initialTokenTableState | tokenTable = parserTokenTable }
         , displayTokenTableState = { initialTokenTableState | tokenTable = displayTokenTable }
+        , executorParams = { initialExecutorParams | input = input }
     }
 
 
@@ -501,7 +507,7 @@ update msg model =
                     updateExecutorParams executorParamsMsg model.executorParams
             in
             { model | executorParams = state }
-                |> withCmdNone
+                |> withCacheCmd
 
 
 
