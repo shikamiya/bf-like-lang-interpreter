@@ -811,7 +811,17 @@ viewOfDebugTabItem _ =
         , link = Tab.link [] [ text "Debug" ]
         , pane =
             Tab.pane [ Spacing.mt3 ]
-                [ Button.button [ Button.onClick <| ChangeProgramContent "++++++++++[>+++++++>++++++++++>+++>+<<<<-]>++.>+.+++++++..+++.>++.<<+++++++++++++++.>.+++.------.--------.>+.>." ] [ text "Set BF Hello world program" ] ]
+                [ Grid.row []
+                    [ Grid.col []
+                        [ Button.button [ Button.onClick <| ChangeProgramContent "++++++++++[>+++++++>++++++++++>+++>+<<<<-]>++.>+.+++++++..+++.>++.<<+++++++++++++++.>.+++.------.--------.>+.>." ] [ text "Set BF Hello world program" ]
+                        ]
+                    ]
+                , Grid.row []
+                    [ Grid.col []
+                        [ Button.button [ Button.onClick <| ChangeProgramContent "+++++++++++++[>+++++++++++++++++>++++++++++>+++++++++++++>++++++++++++<<<<-]>++++++.>-.>>---------.<<<.>+.>>.<<<.>-.>++.<<.>.>----------.<<.>.>++++++++++++++.<<.>-.+.<+.>>+++++++++.>+++.<<<+++.>>>-.---------.<<<----.>-.++." ] [ text "Set BF こんにちは世界 program" ]
+                        ]
+                    ]
+                ]
         }
 
 
