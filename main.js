@@ -5377,13 +5377,10 @@ var author$project$BFParser$convertBFCommandToString = F3(
 						table.a))).b;
 		} else {
 			var commands = command.a;
-			return elm$core$String$concat(
+			var funcStr = A3(author$project$BFParser$convertBFCommandsToString, table, isCopyingComment, commands);
+			return isCopyingComment ? elm$core$String$concat(
 				_List_fromArray(
-					[
-						'\n',
-						A3(author$project$BFParser$convertBFCommandsToString, table, isCopyingComment, commands),
-						'\n'
-					]));
+					['\n', funcStr, '\n'])) : funcStr;
 		}
 	});
 var author$project$BFParser$convertBFCommandsToString = F3(

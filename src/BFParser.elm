@@ -189,4 +189,12 @@ convertBFCommandToString table isCopyingComment command =
                 |> Tuple.second
 
         BFLoopFunc commands ->
-            String.concat [ "\n", convertBFCommandsToString table isCopyingComment commands, "\n" ]
+            let
+                funcStr =
+                    convertBFCommandsToString table isCopyingComment commands
+            in
+            if isCopyingComment then
+                String.concat [ "\n", funcStr, "\n" ]
+
+            else
+                funcStr
