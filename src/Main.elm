@@ -448,7 +448,7 @@ update msg model =
                 |> withCmdNone
 
         CopyConvertedProgram ->
-            update (ChangeProgramContent <| convertBFCommandsToString model.displayTokenTableState.tokenTable model.executorParams.commands) model
+            update (ChangeProgramContent <| convertBFCommandsToString model.displayTokenTableState.tokenTable model.displayNoOpCommand model.executorParams.commands) model
 
         ResetAll ->
             initialModel

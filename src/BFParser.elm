@@ -164,22 +164,29 @@ parseTokens table =
     Parser.run (parseTokensHelper table)
 
 
-convertBFCommandsToString : BFTokenTable -> Array BFCommand -> String
-convertBFCommandsToString table commands =
-    Array.map (convertBFCommandToString table) commands
+convertBFCommandsToString : BFTokenTable -> Bool -> Array BFCommand -> String
+convertBFCommandsToString table isCopyingComment commands =
+    Array.map (convertBFCommandToString table isCopyingComment) commands
         |> Array.toList
         |> String.concat
 
 
-convertBFCommandToString : BFTokenTable -> BFCommand -> String
-convertBFCommandToString table command =
+convertBFCommandToString : BFTokenTable -> Bool -> BFCommand -> String
+convertBFCommandToString table isCopyingComment command =
     case command of
         BFCommand token ->
             Tuple.first table
                 |> List.filter ((==) token.kind << Tuple.first)
                 |> List.head
-                |> Maybe.withDefault ( NoOp, "" )
+                |> Maybe.withDefault
+                    ( NoOp
+                    , if isCopyingComment then
+                        token.value
+
+                      else
+                        ""
+                    )
                 |> Tuple.second
 
         BFLoopFunc commands ->
-            convertBFCommandsToString table commands
+            String.concat [ "\n", convertBFCommandsToString table isCopyingComment commands, "\n" ]
