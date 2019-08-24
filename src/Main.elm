@@ -3,7 +3,7 @@ module Main exposing (main)
 import Array exposing (Array)
 import BFExecutor exposing (getMaybeTapeValue, runBFCommands)
 import BFParser exposing (convertBFCommandsToString, parseTokens)
-import BFTypes exposing (BFCommand(..), BFExecutorParams, BFParseError(..), BFTape(..), BFToken, BFTokenKind(..), BFTokenTable, RunningState(..), bfParseErrorToString, initialExecutorParams, tapePages, tapeSize, tokenKindToString)
+import BFTypes exposing (BFCommand(..), BFExecutorParams, BFParseError(..), BFTape(..), BFToken, BFTokenKind(..), BFTokenTable, RunningState(..), bfParseErrorToString, initialExecutorParams, tapePages, tapeSize, tokenKindFromInt, tokenKindToInt, tokenKindToString)
 import Bootstrap.Button as Button
 import Bootstrap.ButtonGroup as ButtonGroup
 import Bootstrap.CDN
@@ -26,8 +26,8 @@ import Cacher exposing (cache)
 import Html exposing (Html, text)
 import Html.Attributes
 import Html.Events
-import Json.Decode
-import Json.Encode
+import Json.Decode as JD
+import Json.Encode as JE
 import Language.BF
 import Language.HogyLang
 import Language.Ook
@@ -49,11 +49,16 @@ bfTokenTableList model =
     List.concat [ bfDefaultTokenTableList, model.customTokenTableList ]
 
 
+defaultTokenTable : BFTokenTable
+defaultTokenTable =
+    Language.BF.table
+
+
 
 -- Main
 
 
-main : Program Json.Decode.Value Model Msg
+main : Program JD.Value Model Msg
 main =
     Browser.element
         { init = init
@@ -128,7 +133,7 @@ updateTokenTableState msg tokenTableDropdown =
 initialTokenTableState : TokenTableState
 initialTokenTableState =
     { dropdownState = Dropdown.initialState
-    , tokenTable = Language.BF.table
+    , tokenTable = defaultTokenTable
     }
 
 
@@ -136,7 +141,6 @@ type BFExecutorParamsMsg
     = UpdateTokens (Array BFCommand)
     | UpdateInput String
     | UpdateCurrentTapePage Int
-    | ResetAll
     | ExecuteWithNewRunningState RunningState
     | StopExecution
 
@@ -156,9 +160,6 @@ updateExecutorParams msg state =
                     modBy tapePages page
             in
             { state | currentTapePage = newPage }
-
-        ResetAll ->
-            initialExecutorParams
 
         ExecuteWithNewRunningState runningState ->
             runBFCommands { state | runningState = runningState }
@@ -193,6 +194,7 @@ type alias Model =
     , upComingCustomTokenTableDropdown : Dropdown.State
     , commandPopoverState : CommandPopoverState
     , showBFTapeAs : ShowBFTapeAs
+    , resetConfirmationModalState : Modal.Visibility
     , parserTokenTableState : TokenTableState
     , displayTokenTableState : TokenTableState
     , executorParams : BFExecutorParams
@@ -205,7 +207,7 @@ type ShowBFTapeAs
     | ShowBFTapeAsStr
 
 
-init : Json.Decode.Value -> ( Model, Cmd Msg )
+init : JD.Value -> ( Model, Cmd Msg )
 init flags =
     decodeModel flags
         |> update ParseTokens
@@ -225,6 +227,7 @@ initialModel =
     , upComingCustomTokenTableDropdown = Dropdown.initialState
     , commandPopoverState = initialCommandPopoverState
     , showBFTapeAs = ShowBFTapeAsInt
+    , resetConfirmationModalState = Modal.hidden
     , parserTokenTableState = initialTokenTableState
     , displayTokenTableState = initialTokenTableState
     , executorParams = initialExecutorParams
@@ -233,21 +236,88 @@ initialModel =
 
 encodeModel : Model -> String
 encodeModel model =
-    Json.Encode.encode 0 <|
-        Json.Encode.object
-            [ ( "programContent", Json.Encode.string model.programContent ) ]
+    JE.encode 0 <|
+        JE.object
+            [ ( "programContent", JE.string model.programContent )
+            , ( "customLanguages"
+              , JE.list encodeTokenTable model.customTokenTableList
+              )
+            , ( "parserTokenTable", encodeTokenTable model.parserTokenTableState.tokenTable )
+            , ( "displayTokenTable", encodeTokenTable model.displayTokenTableState.tokenTable )
+            ]
 
 
-decodeModel : Json.Decode.Value -> Model
+decodeModel : JD.Value -> Model
 decodeModel value =
     let
+        cacheStr =
+            JD.decodeValue JD.string value
+                |> Result.withDefault ""
+
         programContent =
-            Json.Decode.decodeValue Json.Decode.string value
+            JD.decodeString (JD.field "programContent" JD.string) cacheStr
                 |> Result.withDefault ""
-                |> Json.Decode.decodeString (Json.Decode.field "programContent" Json.Decode.string)
-                |> Result.withDefault ""
+
+        customTokenTableList =
+            JD.decodeString
+                (JD.field "customLanguages" <|
+                    JD.list decodeTokenTable
+                )
+                cacheStr
+                |> Result.withDefault initialModel.customTokenTableList
+
+        parserTokenTable =
+            JD.decodeString
+                (JD.field "parserTokenTable" decodeTokenTable)
+                cacheStr
+                |> Result.withDefault defaultTokenTable
+
+        displayTokenTable =
+            JD.decodeString
+                (JD.field "displayTokenTable" decodeTokenTable)
+                cacheStr
+                |> Result.withDefault defaultTokenTable
     in
-    { initialModel | programContent = programContent }
+    { initialModel
+        | programContent = programContent
+        , customTokenTableList = customTokenTableList
+        , parserTokenTableState = { initialTokenTableState | tokenTable = parserTokenTable }
+        , displayTokenTableState = { initialTokenTableState | tokenTable = displayTokenTable }
+    }
+
+
+encodeTokenTable : BFTokenTable -> JE.Value
+encodeTokenTable ( tableList, name ) =
+    JE.object
+        [ ( "tokens"
+          , JE.list
+                (\( kind, value ) ->
+                    JE.object
+                        [ ( "kind", JE.int <| tokenKindToInt kind )
+                        , ( "value", JE.string value )
+                        ]
+                )
+                tableList
+          )
+        , ( "name", JE.string name )
+        ]
+
+
+decodeTokenTable : JD.Decoder BFTokenTable
+decodeTokenTable =
+    JD.map2 Tuple.pair
+        (JD.field "tokens" <|
+            JD.list <|
+                JD.map2 Tuple.pair
+                    (JD.field "kind" <|
+                        JD.map
+                            (Maybe.withDefault NoOp << tokenKindFromInt)
+                            -- shouldn't become NoOp, it should be Error
+                            JD.int
+                    )
+                    (JD.field "value" JD.string)
+        )
+        (JD.field "name" JD.string)
 
 
 withCmdNone : Model -> ( Model, Cmd msg )
@@ -283,6 +353,8 @@ type Msg
     | UpdateUpComingCustomTokenTableDropdown Dropdown.State
     | UpdateHowShowBFTapeAs ShowBFTapeAs
     | CopyConvertedProgram
+    | ResetAll
+    | UpdateResetConfirmationModalState Modal.Visibility
     | UpdateCommandPopoverState CommandPopoverStateMsg
     | ChangeCommandPopoverState (List Int) Popover.State
     | UpdateParserTokenTableState TokenTableStateMsg
@@ -321,7 +393,7 @@ update msg model =
             { model | customTokenTableList = customTokenTableList }
                 |> update (UpdateAddCustomTokenTableModalState Modal.hidden)
                 |> Tuple.first
-                |> withCmdNone
+                |> withCacheCmd
 
         UpdateAddCustomTokenTableModalState state ->
             { model | addCustomTokenTableModalState = state }
@@ -372,6 +444,14 @@ update msg model =
         CopyConvertedProgram ->
             update (ChangeProgramContent <| convertBFCommandsToString model.displayTokenTableState.tokenTable model.executorParams.commands) model
 
+        ResetAll ->
+            initialModel
+                |> withCacheCmd
+
+        UpdateResetConfirmationModalState state ->
+            { model | resetConfirmationModalState = state }
+                |> withCmdNone
+
         UpdateCommandPopoverState popoverStateMsg ->
             let
                 state =
@@ -395,7 +475,7 @@ update msg model =
             { model | parserTokenTableState = state }
                 |> update ParseTokens
                 |> Tuple.first
-                |> withCmdNone
+                |> withCacheCmd
 
         UpdateDisplayTokenTableState tokenTableStateMsg ->
             let
@@ -403,7 +483,7 @@ update msg model =
                     updateTokenTableState tokenTableStateMsg model.displayTokenTableState
             in
             { model | displayTokenTableState = state }
-                |> withCmdNone
+                |> withCacheCmd
 
         ParseTokens ->
             let
@@ -528,11 +608,23 @@ viewOfMainTabItem model =
                         , Button.button [ Button.onClick (UpdateExecutorParams <| ExecuteWithNewRunningState RunningUntilEndingLoop) ] [ text "SkipLoopOnce" ]
                         , Button.button [ Button.onClick (UpdateExecutorParams <| ExecuteWithNewRunningState RunningUntilLeavingLoop) ] [ text "SkipEntireLoop" ]
                         , Button.button [ Button.onClick (UpdateExecutorParams StopExecution) ] [ text "ResetStepRunPosition" ]
-                        , Button.button [ Button.onClick (UpdateExecutorParams ResetAll) ] [ text "ResetAll" ]
+                        , Button.button [ Button.onClick <| UpdateResetConfirmationModalState Modal.shown ] [ text "ResetAll" ]
                         , Button.button [ Button.onClick CopyConvertedProgram ] [ text "CopyParsedProgramIntoProgramInput" ]
                         , Button.button
                             [ Button.attrs [ Html.Events.onClick <| UpdateAddCustomTokenTableModalState Modal.shown ] ]
                             [ text "Add new Language" ]
+                        , Modal.config (UpdateResetConfirmationModalState Modal.hidden)
+                            |> Modal.hideOnBackdropClick True
+                            |> Modal.h3 [] [ text "Are you sure?" ]
+                            |> Modal.body []
+                                [ text "Resetting everything can't be undone." ]
+                            |> Modal.footer []
+                                [ Button.button [ Button.onClick <| UpdateResetConfirmationModalState Modal.hidden ]
+                                    [ text "Cancel" ]
+                                , Button.button [ Button.onClick ResetAll, Button.danger ]
+                                    [ text "Reset EVERYTHING" ]
+                                ]
+                            |> Modal.view model.resetConfirmationModalState
                         , Modal.config (UpdateAddCustomTokenTableModalState Modal.hidden)
                             |> Modal.hideOnBackdropClick True
                             |> Modal.h3 [] [ text "New Language" ]

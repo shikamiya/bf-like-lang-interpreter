@@ -1,4 +1,4 @@
-module BFTypes exposing (BFCommand(..), BFExecutorParams, BFParseError(..), BFTape(..), BFToken, BFTokenKind(..), BFTokenTable, PreCommand(..), RunningState(..), bfParseErrorToString, extractBFTape, initialBFTape, initialExecutorParams, tapePages, tapeSize, tokenKindToString)
+module BFTypes exposing (BFCommand(..), BFExecutorParams, BFParseError(..), BFTape(..), BFToken, BFTokenKind(..), BFTokenTable, PreCommand(..), RunningState(..), bfParseErrorToString, extractBFTape, initialBFTape, initialExecutorParams, tapePages, tapeSize, tokenKindFromInt, tokenKindToInt, tokenKindToString)
 
 import Array exposing (Array)
 
@@ -151,3 +151,68 @@ tokenKindToString kind =
 
         PrintOutput ->
             "PrintOutput"
+
+
+tokenKindToInt : BFTokenKind -> Int
+tokenKindToInt kind =
+    case kind of
+        NoOp ->
+            0
+
+        IncreasePointer ->
+            1
+
+        DecreasePointer ->
+            2
+
+        IncreaseValue ->
+            3
+
+        DecreaseValue ->
+            4
+
+        PrintOutput ->
+            5
+
+        ReadInput ->
+            6
+
+        LoopStart ->
+            7
+
+        LoopEnd ->
+            8
+
+
+tokenKindFromInt : Int -> Maybe BFTokenKind
+tokenKindFromInt value =
+    case value of
+        0 ->
+            Just NoOp
+
+        1 ->
+            Just IncreasePointer
+
+        2 ->
+            Just DecreasePointer
+
+        3 ->
+            Just IncreaseValue
+
+        4 ->
+            Just DecreaseValue
+
+        5 ->
+            Just PrintOutput
+
+        6 ->
+            Just ReadInput
+
+        7 ->
+            Just LoopStart
+
+        8 ->
+            Just LoopEnd
+
+        _ ->
+            Nothing
