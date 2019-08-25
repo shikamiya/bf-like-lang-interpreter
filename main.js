@@ -4477,24 +4477,7 @@ function _Browser_load(url)
 		}
 	}));
 }
-
-
-function _Url_percentEncode(string)
-{
-	return encodeURIComponent(string);
-}
-
-function _Url_percentDecode(string)
-{
-	try
-	{
-		return elm$core$Maybe$Just(decodeURIComponent(string));
-	}
-	catch (e)
-	{
-		return elm$core$Maybe$Nothing;
-	}
-}var author$project$Main$ParseTokens = {$: 19};
+var author$project$Main$ParseTokens = {$: 19};
 var author$project$BFTypes$NextCommand = 0;
 var author$project$BFTypes$NotRunning = 0;
 var author$project$BFTypes$BFTape = elm$core$Basics$identity;
@@ -10428,7 +10411,6 @@ var elm$html$Html$Events$onInput = function (tagger) {
 			elm$html$Html$Events$alwaysStop,
 			A2(elm$json$Json$Decode$map, tagger, elm$html$Html$Events$targetValue)));
 };
-var elm$url$Url$percentDecode = _Url_percentDecode;
 var rundis$elm_bootstrap$Bootstrap$Internal$Button$Coloring = function (a) {
 	return {$: 1, a: a};
 };
@@ -12204,21 +12186,17 @@ var author$project$Main$viewOfMainTabItem = function (model) {
 																					A2(
 																						elm$core$String$split,
 																						'\n',
-																						A2(
-																							elm$core$Maybe$withDefault,
-																							'',
-																							elm$url$Url$percentDecode(
-																								elm$core$String$concat(
+																						elm$core$String$concat(
+																							A2(
+																								elm$core$List$map,
+																								A2(
+																									elm$core$Basics$composeR,
+																									elm$core$Char$toCode,
 																									A2(
-																										elm$core$List$map,
-																										A2(
-																											elm$core$Basics$composeR,
-																											elm$core$Char$toCode,
-																											A2(
-																												elm$core$Basics$composeR,
-																												author$project$Main$convertCharIntoHexString,
-																												elm$core$Basics$append('%'))),
-																										elm$core$List$reverse(model.f.dC)))))))))))
+																										elm$core$Basics$composeR,
+																										author$project$Main$convertCharIntoHexString,
+																										elm$core$Basics$append('%'))),
+																								elm$core$List$reverse(model.f.dC)))))))))
 																]),
 															A3(
 																rundis$elm_bootstrap$Bootstrap$Card$header,
