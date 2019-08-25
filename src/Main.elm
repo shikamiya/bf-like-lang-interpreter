@@ -31,6 +31,7 @@ import Json.Encode as JE
 import Language.BF
 import Language.HogyLang
 import Language.Ook
+import Url
 
 
 
@@ -599,6 +600,8 @@ viewOfMainTabItem model =
                                                 |> List.reverse
                                                 |> List.map (Char.toCode >> convertCharIntoHexString >> (++) "%")
                                                 |> String.concat
+                                                |> Url.percentDecode
+                                                |> Maybe.withDefault ""
                                                 |> String.split "\n"
                                                 |> List.map text
                                                 |> List.intersperse (Html.br [] [])
